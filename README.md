@@ -1,2 +1,0 @@
-# photon-bomber-io-core
-
