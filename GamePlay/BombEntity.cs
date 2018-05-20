@@ -96,6 +96,7 @@ public class BombEntity : PunBehaviour
         if (!PhotonNetwork.isMasterClient)
             return;
         photonView.RPC("RpcUpdateAddBombRange", newPlayer, addBombRange);
+        photonView.RPC("RpcUpdatePlanterViewId", newPlayer, planterViewId);
     }
 
     private void Start()
@@ -179,7 +180,7 @@ public class BombEntity : PunBehaviour
         if (Planter != null)
             Planter.RemoveBomb(this);
 
-        RpcExplode(playingEffectPositions.ToArray());
+        photonView.RPC("RpcExplode", PhotonTargets.All, playingEffectPositions.ToArray());
         StartCoroutine(Destroying());
     }
 

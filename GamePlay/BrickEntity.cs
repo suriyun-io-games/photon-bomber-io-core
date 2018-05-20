@@ -34,7 +34,7 @@ public class BrickEntity : PunBehaviour
             if (PhotonNetwork.isMasterClient && value != isRendererDisabled)
             {
                 _isRendererDisabled = value;
-                photonView.RPC("RpcUpdateIsRendererDisabled", PhotonTargets.Others, value);
+                photonView.RPC("RpcUpdateIsRendererDisabled", PhotonTargets.All, value);
             }
         }
     }
@@ -90,7 +90,7 @@ public class BrickEntity : PunBehaviour
             isDead = false;
             if (animator != null)
                 animator.SetBool("IsDead", isDead);
-            RpcIsDeadChanged(isDead);
+            photonView.RPC("RpcIsDeadChanged", PhotonTargets.Others, isDead);
             isRendererDisabled = isDead;
         }
     }
@@ -104,7 +104,7 @@ public class BrickEntity : PunBehaviour
         if (animator != null)
             animator.SetBool("IsDead", isDead);
         StartCoroutine(PlayDeadAnimation());
-        RpcIsDeadChanged(isDead);
+        photonView.RPC("RpcIsDeadChanged", PhotonTargets.Others, isDead);
         // Spawn powerup when it dead.
         GameplayManager.Singleton.SpawnPowerUp(TempTransform.position);
     }

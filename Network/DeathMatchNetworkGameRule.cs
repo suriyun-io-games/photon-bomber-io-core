@@ -41,4 +41,15 @@ public class DeathMatchNetworkGameRule : IONetworkGameRule
 
         return true;
     }
+
+    public override void InitialClientObjects()
+    {
+        base.InitialClientObjects();
+        var gameplayManager = FindObjectOfType<GameplayManager>();
+        if (gameplayManager != null)
+        {
+            gameplayManager.killScore = 1;
+            gameplayManager.suicideScore = 0;
+        }
+    }
 }

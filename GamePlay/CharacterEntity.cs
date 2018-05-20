@@ -534,8 +534,8 @@ public class CharacterEntity : BaseNetworkGameCharacter
                 var amount = Random.Range(rewardCurrency.randomAmountMin, rewardCurrency.randomAmountMax);
                 photonView.RPC("RpcTargetRewardCurrency", photonView.owner, currencyId, amount);
             }
+            ++killCount;
         }
-        ++killCount;
     }
 
     public virtual void OnSpawn() { }
