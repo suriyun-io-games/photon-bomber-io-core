@@ -8,6 +8,10 @@ public class IONetworkGameRule : BaseNetworkGameRule
     public override bool HasOptionMatchTime { get { return false; } }
     public override bool HasOptionMatchKill { get { return false; } }
     public override bool HasOptionMatchScore { get { return false; } }
+    public override bool ShowZeroScoreWhenDead { get { return true; } }
+    public override bool ShowZeroKillCountWhenDead { get { return true; } }
+    public override bool ShowZeroAssistCountWhenDead { get { return true; } }
+    public override bool ShowZeroDieCountWhenDead { get { return true; } }
 
     protected override BaseNetworkGameCharacter NewBot()
     {

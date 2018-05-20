@@ -290,7 +290,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
         powerUpBombAmount = 0;
         powerUpHeart = 0;
         powerUpMoveSpeed = 0;
-        isDead = true;
+        isDead = false;
         selectCharacter = "";
         selectHead = "";
         selectBomb = "";
