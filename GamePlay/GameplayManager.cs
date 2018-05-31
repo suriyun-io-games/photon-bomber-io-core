@@ -69,10 +69,7 @@ public class GameplayManager : PunBehaviour
     public void SpawnPowerUp(PowerUpEntity powerUpPrefab, Vector3 position)
     {
         if (powerUpPrefab != null)
-        {
-            var powerUpEntityGo = PhotonNetwork.InstantiateSceneObject(powerUpPrefab.name, position, Quaternion.identity, 0, new object[0]);
-            var powerUpEntity = powerUpEntityGo.GetComponent<PowerUpEntity>();
-        }
+            PhotonNetwork.InstantiateSceneObject(powerUpPrefab.name, position, Quaternion.identity, 0, new object[0]);
     }
 
     public Vector3 GetCharacterSpawnPosition(CharacterEntity character)

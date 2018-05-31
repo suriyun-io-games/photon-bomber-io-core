@@ -54,7 +54,6 @@ public class GameInstance : BaseNetworkGameInstance
         foreach (var bomb in bombs)
         {
             Bombs.Add(bomb.GetId(), bomb);
-            var bombPrefab = bomb.bombPrefab;
         }
 
         UpdateAvailableItems();

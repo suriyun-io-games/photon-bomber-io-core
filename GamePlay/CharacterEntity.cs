@@ -536,6 +536,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
             }
             ++killCount;
         }
+        GameNetworkManager.Singleton.SendKillNotify(playerName, target.playerName, bombData == null ? string.Empty : bombData.GetId());
     }
 
     public virtual void OnSpawn() { }
