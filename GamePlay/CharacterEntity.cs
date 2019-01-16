@@ -496,10 +496,11 @@ public class CharacterEntity : BaseNetworkGameCharacter
     
     public void ReceiveDamage(CharacterEntity attacker)
     {
-        if (!PhotonNetwork.isMasterClient)
+        var gameplayManager = GameplayManager.Singleton;
+        if (isDead || isInvincible)
             return;
 
-        if (isDead || isInvincible)
+        if (!gameplayManager.CanReceiveDamage(this, attacker))
             return;
 
         if (powerUpHeart == 0)

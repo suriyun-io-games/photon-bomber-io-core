@@ -18,14 +18,22 @@ public class BotEntity : CharacterEntity
             }
         }
     }
+    protected PunTeams.Team botPlayerTeam;
+    public override PunTeams.Team playerTeam
+    {
+        get { return botPlayerTeam; }
+        set
+        {
+            if (PhotonNetwork.isMasterClient)
+            {
+                botPlayerTeam = value;
+                photonView.RPC("RpcUpdateBotTeam", PhotonTargets.Others, value);
+            }
+        }
+    }
     private Queue<Vector3> waypoints = new Queue<Vector3>();
     private Vector3 targetPosition;
     private BombEntity bomb;
-
-    protected override void Init()
-    {
-        base.Init();
-    }
 
     protected override void Awake()
     {
@@ -36,6 +44,24 @@ public class BotEntity : CharacterEntity
             targetPosition = TempTransform.position;
             StartCoroutine(UpdateState());
         }
+    }
+
+    protected override void SyncData()
+    {
+        if (!PhotonNetwork.isMasterClient)
+            return;
+        base.SyncData();
+        photonView.RPC("RpcUpdateBotName", PhotonTargets.Others, botPlayerName);
+        photonView.RPC("RpcUpdateBotTeam", PhotonTargets.Others, botPlayerTeam);
+    }
+
+    public override void OnPhotonPlayerConnected(PhotonPlayer newPlayer)
+    {
+        if (!PhotonNetwork.isMasterClient)
+            return;
+        base.OnPhotonPlayerConnected(newPlayer);
+        photonView.RPC("RpcUpdateBotName", newPlayer, botPlayerName);
+        photonView.RPC("RpcUpdateBotTeam", newPlayer, botPlayerTeam);
     }
 
     // Override to do nothing
@@ -190,13 +216,14 @@ public class BotEntity : CharacterEntity
     private bool IsNearBrickOrPlayer(Vector3 position, Vector3 direction, float distance = 1)
     {
         RaycastHit hitInfo;
+        var gameplayManager = GameplayManager.Singleton;
         if (Physics.Raycast(position + Vector3.up * 0.1f, direction, out hitInfo, distance))
         {
             // If hit brick or character, then it's mean bot should plant the bomb here
             var brick = hitInfo.transform.GetComponent<BrickEntity>();
             var character = hitInfo.transform.GetComponent<CharacterEntity>();
             return (brick != null && !brick.isDead) || 
-                (character != null && character != this && !character.isDead);
+                (character != null && character != this && !character.isDead && gameplayManager.CanReceiveDamage(character, this));
         }
         return false;
     }
@@ -266,15 +293,15 @@ public class BotEntity : CharacterEntity
             !IsNearWallOrBrickOrBomb(currentPosition, Vector3.right))));
     }
 
-    public override void OnPhotonPlayerConnected(PhotonPlayer newPlayer)
-    {
-        base.OnPhotonPlayerConnected(newPlayer);
-        photonView.RPC("RpcUpdateBotName", newPlayer, botPlayerName);
-    }
-
     [PunRPC]
     protected void RpcUpdateBotName(string name)
     {
         botPlayerName = name;
+    }
+
+    [PunRPC]
+    protected void RpcUpdateBotTeam(PunTeams.Team team)
+    {
+        botPlayerTeam = team;
     }
 }
