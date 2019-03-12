@@ -38,7 +38,7 @@ public class PowerUpEntity : PunBehaviour
                 character.PowerUpHeart += stats.heart;
                 character.PowerUpMoveSpeed += stats.moveSpeed;
             }
-            if (character.photonView.isMine)
+            if (character.photonView.isMine && !(character is BotEntity))
             {
                 foreach (var currency in currencies)
                 {
