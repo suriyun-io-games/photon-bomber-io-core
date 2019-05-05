@@ -33,6 +33,8 @@ public class GameplayManager : PunBehaviour
     public float respawnDuration = 5f;
     public float invincibleDuration = 1.5f;
     public Transform[] characterSpawnPositions;
+    public Transform[] characterSpawnPositionsForTeamA;
+    public Transform[] characterSpawnPositionsForTeamB;
     public PowerUpSpawnData[] powerUps;
     public int noDropPowerUpWeight = 1;
     public readonly Dictionary<PowerUpEntity, int> powerUpDropWeights = new Dictionary<PowerUpEntity, int>();
@@ -74,6 +76,16 @@ public class GameplayManager : PunBehaviour
 
     public Vector3 GetCharacterSpawnPosition(CharacterEntity character)
     {
+        if (character.playerTeam == PunTeams.Team.red &&
+            characterSpawnPositionsForTeamA != null &&
+            characterSpawnPositionsForTeamA.Length > 0)
+            return characterSpawnPositionsForTeamA[Random.Range(0, characterSpawnPositionsForTeamA.Length)].position;
+
+        if (character.playerTeam == PunTeams.Team.blue &&
+            characterSpawnPositionsForTeamB != null &&
+            characterSpawnPositionsForTeamB.Length > 0)
+            return characterSpawnPositionsForTeamB[Random.Range(0, characterSpawnPositionsForTeamB.Length)].position;
+
         if (characterSpawnPositions == null || characterSpawnPositions.Length == 0)
             return Vector3.zero;
         return characterSpawnPositions[Random.Range(0, characterSpawnPositions.Length)].position;
