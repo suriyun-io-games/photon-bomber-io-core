@@ -23,9 +23,9 @@ public class CharacterEntity : BaseNetworkGameCharacter
     protected int _powerUpHeart;
     protected int _powerUpMoveSpeed;
     protected bool _isDead;
-    protected string _selectCharacter;
-    protected string _selectHead;
-    protected string _selectBomb;
+    protected int _selectCharacter;
+    protected int _selectHead;
+    protected int _selectBomb;
     protected bool _isInvincible;
     protected string _extra;
 
@@ -101,7 +101,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
             }
         }
     }
-    public virtual string selectCharacter
+    public virtual int selectCharacter
     {
         get { return _selectCharacter; }
         set
@@ -113,7 +113,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
             }
         }
     }
-    public virtual string selectHead
+    public virtual int selectHead
     {
         get { return _selectHead; }
         set
@@ -125,7 +125,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
             }
         }
     }
-    public virtual string selectBomb
+    public virtual int selectBomb
     {
         get { return _selectBomb; }
         set
@@ -294,9 +294,9 @@ public class CharacterEntity : BaseNetworkGameCharacter
         powerUpHeart = 0;
         powerUpMoveSpeed = 0;
         isDead = false;
-        selectCharacter = "";
-        selectHead = "";
-        selectBomb = "";
+        selectCharacter = 0;
+        selectHead = 0;
+        selectBomb = 0;
         isInvincible = false;
         extra = "";
     }
@@ -614,13 +614,13 @@ public class CharacterEntity : BaseNetworkGameCharacter
         bombs.Clear();
     }
 
-    public void CmdInit(string selectHead, string selectCharacter, string selectBomb, string extra)
+    public void CmdInit(int selectHead, int selectCharacter, int selectBomb, string extra)
     {
         photonView.RPC("RpcServerInit", PhotonTargets.MasterClient, selectHead, selectCharacter, selectBomb, extra);
     }
 
     [PunRPC]
-    protected void RpcServerInit(string selectHead, string selectCharacter, string selectBomb, string extra)
+    protected void RpcServerInit(int selectHead, int selectCharacter, int selectBomb, string extra)
     {
         isDead = false;
         this.selectHead = selectHead;
@@ -729,7 +729,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
         _isDead = isDead;
     }
     [PunRPC]
-    protected virtual void RpcUpdateSelectCharacter(string selectCharacter)
+    protected virtual void RpcUpdateSelectCharacter(int selectCharacter)
     {
         _selectCharacter = selectCharacter;
         if (characterModel != null)
@@ -746,7 +746,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
         characterModel.gameObject.SetActive(true);
     }
     [PunRPC]
-    protected virtual void RpcUpdateSelectHead(string selectHead)
+    protected virtual void RpcUpdateSelectHead(int selectHead)
     {
         _selectHead = selectHead;
         headData = GameInstance.GetHead(selectHead);
@@ -754,7 +754,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
             characterModel.SetHeadModel(headData.modelObject);
     }
     [PunRPC]
-    protected virtual void RpcUpdateSelectBomb(string selectBomb)
+    protected virtual void RpcUpdateSelectBomb(int selectBomb)
     {
         _selectBomb = selectBomb;
         bombData = GameInstance.GetBomb(selectBomb);
