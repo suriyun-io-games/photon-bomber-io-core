@@ -35,8 +35,13 @@ public class BombEntity : PunBehaviour
     public AudioClip explosionSound;
     public EffectEntity explosionEffect;
     public float lifeTime = 2f;
+    public float kickMoveSpeed = 5f;
+    public bool canExplodeThroughBricks;
 
     public bool Exploded { get; protected set; }
+    private int _kickerViewId;
+    private sbyte _dirX;
+    private sbyte _dirZ;
     private List<CharacterEntity> ignoredCharacters;
     private CharacterEntity planter;
     public CharacterEntity Planter
@@ -134,6 +139,51 @@ public class BombEntity : PunBehaviour
                 Physics.IgnoreCollision(ignoredCharacter.TempCollider, TempCollider, false);
         }
         ignoredCharacters = newIgnoreList;
+
+        UpdateMovement();
+    }
+
+    private void UpdateMovement()
+    {
+        if (!PhotonNetwork.isMasterClient || TempRigidbody == null)
+            return;
+
+        if (Mathf.Abs(_dirX) > 0 || Mathf.Abs(_dirZ) > 0)
+        {
+            TempRigidbody.isKinematic = false;
+            Vector3 targetVelocity = new Vector3(_dirX, 0, _dirZ) * kickMoveSpeed;
+            // Apply a force that attempts to reach our target velocity
+            Vector3 velocity = TempRigidbody.velocity;
+            Vector3 velocityChange = (targetVelocity - velocity);
+            velocityChange.x = Mathf.Clamp(velocityChange.x, -kickMoveSpeed, kickMoveSpeed);
+            velocityChange.y = 0;
+            velocityChange.z = Mathf.Clamp(velocityChange.z, -kickMoveSpeed, kickMoveSpeed);
+            TempRigidbody.AddForce(velocityChange, ForceMode.VelocityChange);
+        }
+        else
+        {
+            TempRigidbody.isKinematic = true;
+        }
+    }
+
+    private void OnCollisionStay(Collision collision)
+    {
+        var characterEntity = collision.gameObject.GetComponent<CharacterEntity>();
+        if (characterEntity != null)
+        {
+            if (characterEntity.photonView.viewID == _kickerViewId)
+                return;
+            _dirX = 0;
+            _dirZ = 0;
+            return;
+        }
+        var bombEntity = collision.gameObject.GetComponent<BombEntity>();
+        if (bombEntity != null)
+        {
+            _dirX = 0;
+            _dirZ = 0;
+            return;
+        }
     }
 
     private void OnDrawGizmos()
@@ -219,8 +269,11 @@ public class BombEntity : PunBehaviour
                 powerUpEntity != null ||
                 bombEntity != null)
                 collideWalls = false;
-            if (brickEntity != null && !brickEntity.isDead && !collideBrick)
-                collideBrick = true;
+            if (!canExplodeThroughBricks)
+            {
+                if (brickEntity != null && !brickEntity.isDead && !collideBrick)
+                    collideBrick = true;
+            }
             // Next logics will work only on server only so skip it on client
             if (PhotonNetwork.isMasterClient)
             {
@@ -299,5 +352,18 @@ public class BombEntity : PunBehaviour
     protected void RpcUpdatePlanterViewId(int planterViewId)
     {
         _planterViewId = planterViewId;
+    }
+
+    public void CmdKick(int kicker, sbyte dirX, sbyte dirZ)
+    {
+        photonView.RPC("RpcKick", PhotonTargets.MasterClient, kicker, dirX, dirZ);
+    }
+
+    [PunRPC]
+    protected void RpcKick(int kickerViewId, sbyte dirX, sbyte dirZ)
+    {
+        _kickerViewId = kickerViewId;
+        _dirX = dirX;
+        _dirZ = dirZ;
     }
 }

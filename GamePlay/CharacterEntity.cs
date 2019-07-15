@@ -22,12 +22,14 @@ public class CharacterEntity : BaseNetworkGameCharacter
     protected int _powerUpBombAmount;
     protected int _powerUpHeart;
     protected int _powerUpMoveSpeed;
+    protected bool _powerUpCanKickBomb;
     protected bool _isDead;
     protected int _selectCharacter;
     protected int _selectHead;
     protected int _selectBomb;
     protected bool _isInvincible;
     protected string _extra;
+    protected BombEntity kickingBomb;
 
     public virtual int watchAdsCount
     {
@@ -86,6 +88,18 @@ public class CharacterEntity : BaseNetworkGameCharacter
             {
                 _powerUpMoveSpeed = value;
                 photonView.RPC("RpcUpdatePowerUpMoveSpeed", PhotonTargets.Others, value);
+            }
+        }
+    }
+    public virtual bool powerUpCanKickBomb
+    {
+        get { return _powerUpCanKickBomb; }
+        set
+        {
+            if (PhotonNetwork.isMasterClient && value != powerUpCanKickBomb)
+            {
+                _powerUpCanKickBomb = value;
+                photonView.RPC("RpcUpdateCanKickBomb", PhotonTargets.Others, value);
             }
         }
     }
@@ -181,6 +195,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
     protected Vector2 inputMove;
     protected Vector3? previousPosition;
     protected Vector3 currentVelocity;
+    protected Vector3 currentMoveDirection;
 
     public bool isReady { get; private set; }
     public float deathTime { get; private set; }
@@ -273,6 +288,17 @@ public class CharacterEntity : BaseNetworkGameCharacter
         }
     }
 
+    public bool PowerUpCanKickBomb
+    {
+        get { return powerUpCanKickBomb; }
+        set
+        {
+            if (!PhotonNetwork.isMasterClient)
+                return;
+            powerUpCanKickBomb = value;
+        }
+    }
+
     public int TotalMoveSpeed
     {
         get
@@ -293,6 +319,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
         powerUpBombAmount = 0;
         powerUpHeart = 0;
         powerUpMoveSpeed = 0;
+        powerUpCanKickBomb = false;
         isDead = false;
         selectCharacter = 0;
         selectHead = 0;
@@ -347,6 +374,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
         photonView.RPC("RpcUpdatePowerUpBombAmount", newPlayer, powerUpBombAmount);
         photonView.RPC("RpcUpdatePowerUpHeart", newPlayer, powerUpHeart);
         photonView.RPC("RpcUpdatePowerUpMoveSpeed", newPlayer, powerUpMoveSpeed);
+        photonView.RPC("RpcUpdateCanKickBomb", newPlayer, powerUpCanKickBomb);
         photonView.RPC("RpcUpdateIsDead", newPlayer, isDead);
         photonView.RPC("RpcUpdateSelectCharacter", newPlayer, selectCharacter);
         photonView.RPC("RpcUpdateSelectHead", newPlayer, selectHead);
@@ -360,7 +388,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
         base.Update();
         if (NetworkManager != null && NetworkManager.IsMatchEnded)
             return;
-
+        
         if (IsDead)
         {
             if (!PhotonNetwork.isMasterClient && photonView.isMine && Time.unscaledTime - deathTime >= DISCONNECT_WHEN_NOT_RESPAWN_DURATION)
@@ -390,6 +418,50 @@ public class CharacterEntity : BaseNetworkGameCharacter
             return;
 
         UpdateMovements();
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (!photonView.isMine)
+            return;
+
+        if (PowerUpCanKickBomb)
+            kickingBomb = collision.gameObject.GetComponent<BombEntity>();
+    }
+
+    private void OnCollisionStay(Collision collision)
+    {
+        if (!photonView.isMine)
+            return;
+
+        if (!PowerUpCanKickBomb || kickingBomb == null)
+            return;
+
+        if (kickingBomb == collision.gameObject.GetComponent<BombEntity>())
+        {
+            var moveDirNorm = currentMoveDirection.normalized;
+            var heading = kickingBomb.TempTransform.position - TempTransform.position;
+            var distance = heading.magnitude;
+            var direction = heading / distance;
+            
+            if ((moveDirNorm.x > 0.5f  && direction.x > 0.5f) ||
+                (moveDirNorm.z > 0.5f && direction.z > 0.5f) ||
+                (moveDirNorm.x < -0.5f && direction.x < -0.5f) ||
+                (moveDirNorm.z < -0.5f && direction.z < -0.5f))
+            {
+                // Kick bomb if direction is opposite
+                kickingBomb.CmdKick(photonView.viewID, (sbyte)moveDirNorm.x, (sbyte)moveDirNorm.z);
+            }
+        }
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        if (!photonView.isMine)
+            return;
+
+        if (!PowerUpCanKickBomb || kickingBomb == collision.gameObject.GetComponent<BombEntity>())
+            kickingBomb = null;
     }
 
     protected virtual void UpdateInput()
@@ -483,8 +555,8 @@ public class CharacterEntity : BaseNetworkGameCharacter
         if (!photonView.isMine || isDead)
             return;
 
-        var moveDirection = new Vector3(inputMove.x, 0, inputMove.y);
-        Move(moveDirection);
+        currentMoveDirection = new Vector3(inputMove.x, 0, inputMove.y);
+        Move(currentMoveDirection);
     }
 
     public void RemoveBomb(BombEntity bomb)
@@ -590,12 +662,15 @@ public class CharacterEntity : BaseNetworkGameCharacter
         PowerUpBombAmount = 0;
         PowerUpHeart = 0;
         PowerUpMoveSpeed = 0;
+        PowerUpCanKickBomb = false;
         if (characterData != null)
         {
             PowerUpBombRange += characterData.stats.bombRange;
             PowerUpBombAmount += characterData.stats.bombAmount;
             PowerUpHeart += characterData.stats.heart;
             PowerUpMoveSpeed += characterData.stats.moveSpeed;
+            if (!PowerUpCanKickBomb)
+                PowerUpCanKickBomb = characterData.stats.canKickBomb;
         }
         if (headData != null)
         {
@@ -603,6 +678,8 @@ public class CharacterEntity : BaseNetworkGameCharacter
             PowerUpBombAmount += headData.stats.bombAmount;
             PowerUpHeart += headData.stats.heart;
             PowerUpMoveSpeed += headData.stats.moveSpeed;
+            if (!PowerUpCanKickBomb)
+                PowerUpCanKickBomb = headData.stats.canKickBomb;
         }
         if (bombData != null)
         {
@@ -610,6 +687,8 @@ public class CharacterEntity : BaseNetworkGameCharacter
             PowerUpBombAmount += bombData.stats.bombAmount;
             PowerUpHeart += bombData.stats.heart;
             PowerUpMoveSpeed += bombData.stats.moveSpeed;
+            if (!PowerUpCanKickBomb)
+                PowerUpCanKickBomb = bombData.stats.canKickBomb;
         }
         bombs.Clear();
     }
@@ -720,6 +799,11 @@ public class CharacterEntity : BaseNetworkGameCharacter
     protected virtual void RpcUpdatePowerUpMoveSpeed(int powerUpMoveSpeed)
     {
         _powerUpMoveSpeed = powerUpMoveSpeed;
+    }
+    [PunRPC]
+    protected virtual void RpcUpdateCanKickBomb(bool canKickBomb)
+    {
+        _powerUpCanKickBomb = canKickBomb;
     }
     [PunRPC]
     protected virtual void RpcUpdateIsDead(bool isDead)

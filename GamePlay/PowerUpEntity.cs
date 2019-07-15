@@ -37,6 +37,8 @@ public class PowerUpEntity : PunBehaviour
                 character.PowerUpBombAmount += stats.bombAmount;
                 character.PowerUpHeart += stats.heart;
                 character.PowerUpMoveSpeed += stats.moveSpeed;
+                if (!character.PowerUpCanKickBomb)
+                    character.PowerUpCanKickBomb = stats.canKickBomb;
             }
             if (character.photonView.isMine && !(character is BotEntity))
             {

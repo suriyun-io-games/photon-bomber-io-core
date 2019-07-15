@@ -5,4 +5,5 @@ public class CharacterStats
     public int bombAmount;
     public int heart;
     public int moveSpeed;
+    public bool canKickBomb;
 }
