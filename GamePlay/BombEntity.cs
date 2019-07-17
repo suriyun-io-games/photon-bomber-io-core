@@ -354,15 +354,9 @@ public class BombEntity : PunBehaviour
         _planterViewId = planterViewId;
     }
 
-    public void CmdKick(int kicker, sbyte dirX, sbyte dirZ)
+    public void Kick(int kicker, sbyte dirX, sbyte dirZ)
     {
-        photonView.RPC("RpcKick", PhotonTargets.MasterClient, kicker, dirX, dirZ);
-    }
-
-    [PunRPC]
-    protected void RpcKick(int kickerViewId, sbyte dirX, sbyte dirZ)
-    {
-        _kickerViewId = kickerViewId;
+        _kickerViewId = kicker;
         _dirX = dirX;
         _dirZ = dirZ;
     }
