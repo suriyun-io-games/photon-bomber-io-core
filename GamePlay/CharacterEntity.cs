@@ -26,7 +26,6 @@ public class CharacterEntity : BaseNetworkGameCharacter
     protected bool _isInvincible;
     protected CharacterStats _addStats;
     protected string _extra;
-    protected BombEntity kickingBomb;
 
     public virtual int watchAdsCount
     {
@@ -158,6 +157,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
     protected Vector3? previousPosition;
     protected Vector3 currentVelocity;
     protected Vector3 currentMoveDirection;
+    protected BombEntity kickingBomb;
 
     public bool isReady { get; private set; }
     public float deathTime { get; private set; }
