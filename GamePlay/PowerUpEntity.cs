@@ -32,14 +32,7 @@ public class PowerUpEntity : PunBehaviour
             isDead = true;
             EffectEntity.PlayEffect(powerUpEffect, character.effectTransform);
             if (PhotonNetwork.isMasterClient)
-            {
-                character.PowerUpBombRange += stats.bombRange;
-                character.PowerUpBombAmount += stats.bombAmount;
-                character.PowerUpHeart += stats.heart;
-                character.PowerUpMoveSpeed += stats.moveSpeed;
-                if (!character.PowerUpCanKickBomb)
-                    character.PowerUpCanKickBomb = stats.canKickBomb;
-            }
+                character.addStats += stats;
             if (character.photonView.isMine && !(character is BotEntity))
             {
                 foreach (var currency in currencies)

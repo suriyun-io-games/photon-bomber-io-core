@@ -18,16 +18,13 @@ public class CharacterEntity : BaseNetworkGameCharacter
 
     #region Sync Vars
     protected int _watchAdsCount;
-    protected int _powerUpBombRange;
-    protected int _powerUpBombAmount;
-    protected int _powerUpHeart;
-    protected int _powerUpMoveSpeed;
-    protected bool _powerUpCanKickBomb;
     protected bool _isDead;
     protected int _selectCharacter;
     protected int _selectHead;
     protected int _selectBomb;
+    protected int[] _selectCustomEquipments;
     protected bool _isInvincible;
+    protected CharacterStats _addStats;
     protected string _extra;
     protected BombEntity kickingBomb;
 
@@ -40,66 +37,6 @@ public class CharacterEntity : BaseNetworkGameCharacter
             {
                 _watchAdsCount = value;
                 photonView.RPC("RpcUpdateWatchAdsCount", PhotonTargets.Others, value);
-            }
-        }
-    }
-    public virtual int powerUpBombRange
-    {
-        get { return _powerUpBombRange; }
-        set
-        {
-            if (PhotonNetwork.isMasterClient && value != powerUpBombRange)
-            {
-                _powerUpBombRange = value;
-                photonView.RPC("RpcUpdatePowerUpBombRange", PhotonTargets.Others, value);
-            }
-        }
-    }
-    public virtual int powerUpBombAmount
-    {
-        get { return _powerUpBombAmount; }
-        set
-        {
-            if (PhotonNetwork.isMasterClient && value != powerUpBombAmount)
-            {
-                _powerUpBombAmount = value;
-                photonView.RPC("RpcUpdatePowerUpBombAmount", PhotonTargets.Others, value);
-            }
-        }
-    }
-    public virtual int powerUpHeart
-    {
-        get { return _powerUpHeart; }
-        set
-        {
-            if (PhotonNetwork.isMasterClient && value != powerUpHeart)
-            {
-                _powerUpHeart = value;
-                photonView.RPC("RpcUpdatePowerUpHeart", PhotonTargets.Others, value);
-            }
-        }
-    }
-    public virtual int powerUpMoveSpeed
-    {
-        get { return _powerUpMoveSpeed; }
-        set
-        {
-            if (PhotonNetwork.isMasterClient && value != powerUpMoveSpeed)
-            {
-                _powerUpMoveSpeed = value;
-                photonView.RPC("RpcUpdatePowerUpMoveSpeed", PhotonTargets.Others, value);
-            }
-        }
-    }
-    public virtual bool powerUpCanKickBomb
-    {
-        get { return _powerUpCanKickBomb; }
-        set
-        {
-            if (PhotonNetwork.isMasterClient && value != powerUpCanKickBomb)
-            {
-                _powerUpCanKickBomb = value;
-                photonView.RPC("RpcUpdateCanKickBomb", PhotonTargets.Others, value);
             }
         }
     }
@@ -151,6 +88,18 @@ public class CharacterEntity : BaseNetworkGameCharacter
             }
         }
     }
+    public virtual int[] selectCustomEquipments
+    {
+        get { return _selectCustomEquipments; }
+        set
+        {
+            if (PhotonNetwork.isMasterClient && value != selectCustomEquipments)
+            {
+                _selectCustomEquipments = value;
+                photonView.RPC("RpcUpdateSelectCustomEquipments", PhotonTargets.All, value);
+            }
+        }
+    }
     public virtual bool isInvincible
     {
         get { return _isInvincible; }
@@ -160,6 +109,18 @@ public class CharacterEntity : BaseNetworkGameCharacter
             {
                 _isInvincible = value;
                 photonView.RPC("RpcUpdateIsInvincible", PhotonTargets.Others, value);
+            }
+        }
+    }
+    public virtual CharacterStats addStats
+    {
+        get { return _addStats; }
+        set
+        {
+            if (PhotonNetwork.isMasterClient)
+            {
+                _addStats = value;
+                photonView.RPC("RpcUpdateAddStats", PhotonTargets.Others, JsonUtility.ToJson(value));
             }
         }
     }
@@ -191,6 +152,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
     protected CharacterData characterData;
     protected HeadData headData;
     protected BombData bombData;
+    protected Dictionary<int, CustomEquipmentData> customEquipmentDict = new Dictionary<int, CustomEquipmentData>();
     protected bool isMobileInput;
     protected Vector2 inputMove;
     protected Vector3? previousPosition;
@@ -234,69 +196,51 @@ public class CharacterEntity : BaseNetworkGameCharacter
 
     public int PowerUpBombRange
     {
-        get { return powerUpBombRange; }
-        set
+        get
         {
-            if (!PhotonNetwork.isMasterClient)
-                return;
-            powerUpBombRange = value;
             var max = GameplayManager.Singleton.maxBombRangePowerUp;
-            if (powerUpBombRange > max)
-                powerUpBombRange = max;
+            if (addStats.bombRange > max)
+                return max;
+            return addStats.bombRange;
         }
     }
 
     public int PowerUpBombAmount
     {
-        get { return powerUpBombAmount; }
-        set
+        get
         {
-            if (!PhotonNetwork.isMasterClient)
-                return;
-            powerUpBombAmount = value;
             var max = GameplayManager.Singleton.maxBombAmountPowerUp;
-            if (powerUpBombAmount > max)
-                powerUpBombAmount = max;
+            if (addStats.bombAmount > max)
+                return max;
+            return addStats.bombAmount;
         }
     }
 
     public int PowerUpHeart
     {
-        get { return powerUpHeart; }
-        set
+        get
         {
-            if (!PhotonNetwork.isMasterClient)
-                return;
-            powerUpHeart = value;
             var max = GameplayManager.Singleton.maxHeartPowerUp;
-            if (powerUpHeart > max)
-                powerUpHeart = max;
+            if (addStats.heart > max)
+                return max;
+            return addStats.heart;
         }
     }
 
     public int PowerUpMoveSpeed
     {
-        get { return powerUpMoveSpeed; }
-        set
+        get
         {
-            if (!PhotonNetwork.isMasterClient)
-                return;
-            powerUpMoveSpeed = value;
             var max = GameplayManager.Singleton.maxMoveSpeedPowerUp;
-            if (powerUpMoveSpeed > max)
-                powerUpMoveSpeed = max;
+            if (addStats.moveSpeed > max)
+                return max;
+            return addStats.moveSpeed;
         }
     }
 
     public bool PowerUpCanKickBomb
     {
-        get { return powerUpCanKickBomb; }
-        set
-        {
-            if (!PhotonNetwork.isMasterClient)
-                return;
-            powerUpCanKickBomb = value;
-        }
+        get { return addStats.canKickBomb; }
     }
 
     public int TotalMoveSpeed
@@ -304,7 +248,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
         get
         {
             var gameplayManager = GameplayManager.Singleton;
-            var total = gameplayManager.minMoveSpeed + (powerUpMoveSpeed * gameplayManager.addMoveSpeedPerPowerUp);
+            var total = gameplayManager.minMoveSpeed + (PowerUpMoveSpeed * gameplayManager.addMoveSpeedPerPowerUp);
             return total;
         }
     }
@@ -315,11 +259,6 @@ public class CharacterEntity : BaseNetworkGameCharacter
             return;
         base.Init();
         watchAdsCount = 0;
-        powerUpBombRange = 0;
-        powerUpBombAmount = 0;
-        powerUpHeart = 0;
-        powerUpMoveSpeed = 0;
-        powerUpCanKickBomb = false;
         isDead = false;
         selectCharacter = 0;
         selectHead = 0;
@@ -364,22 +303,35 @@ public class CharacterEntity : BaseNetworkGameCharacter
         }
     }
 
+    protected override void SyncData()
+    {
+        base.SyncData();
+        if (!PhotonNetwork.isMasterClient)
+            return;
+        photonView.RPC("RpcUpdateWatchAdsCount", PhotonTargets.Others, watchAdsCount);
+        photonView.RPC("RpcUpdateIsDead", PhotonTargets.Others, isDead);
+        photonView.RPC("RpcUpdateSelectCharacter", PhotonTargets.Others, selectCharacter);
+        photonView.RPC("RpcUpdateSelectHead", PhotonTargets.Others, selectHead);
+        photonView.RPC("RpcUpdateSelectBomb", PhotonTargets.Others, selectBomb);
+        photonView.RPC("RpcUpdateSelectCustomEquipments", PhotonTargets.Others, selectCustomEquipments);
+        photonView.RPC("RpcUpdateIsInvincible", PhotonTargets.Others, isInvincible);
+        photonView.RPC("RpcUpdateAddStats", PhotonTargets.Others, JsonUtility.ToJson(addStats));
+        photonView.RPC("RpcUpdateExtra", PhotonTargets.Others, extra);
+    }
+
     public override void OnPhotonPlayerConnected(PhotonPlayer newPlayer)
     {
         base.OnPhotonPlayerConnected(newPlayer);
         if (!PhotonNetwork.isMasterClient)
             return;
         photonView.RPC("RpcUpdateWatchAdsCount", newPlayer, watchAdsCount);
-        photonView.RPC("RpcUpdatePowerUpBombRange", newPlayer, powerUpBombRange);
-        photonView.RPC("RpcUpdatePowerUpBombAmount", newPlayer, powerUpBombAmount);
-        photonView.RPC("RpcUpdatePowerUpHeart", newPlayer, powerUpHeart);
-        photonView.RPC("RpcUpdatePowerUpMoveSpeed", newPlayer, powerUpMoveSpeed);
-        photonView.RPC("RpcUpdateCanKickBomb", newPlayer, powerUpCanKickBomb);
         photonView.RPC("RpcUpdateIsDead", newPlayer, isDead);
         photonView.RPC("RpcUpdateSelectCharacter", newPlayer, selectCharacter);
         photonView.RPC("RpcUpdateSelectHead", newPlayer, selectHead);
         photonView.RPC("RpcUpdateSelectBomb", newPlayer, selectBomb);
+        photonView.RPC("RpcUpdateSelectCustomEquipments", newPlayer, selectCustomEquipments);
         photonView.RPC("RpcUpdateIsInvincible", newPlayer, isInvincible);
+        photonView.RPC("RpcUpdateAddStats", newPlayer, JsonUtility.ToJson(addStats));
         photonView.RPC("RpcUpdateExtra", newPlayer, extra);
     }
 
@@ -575,7 +527,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
         if (!gameplayManager.CanReceiveDamage(this, attacker))
             return;
 
-        if (powerUpHeart == 0)
+        if (addStats.heart == 0)
         {
             if (attacker != null)
                 attacker.KilledTarget(this);
@@ -586,9 +538,11 @@ public class CharacterEntity : BaseNetworkGameCharacter
             TempRigidbody.velocity = new Vector3(0, velocity.y, 0);
         }
 
-        if (powerUpHeart > 0)
+        if (addStats.heart > 0)
         {
-            --powerUpHeart;
+            var tempStats = addStats;
+            --tempStats.heart;
+            addStats = tempStats;
             ServerInvincible();
         }
     }
@@ -658,53 +612,35 @@ public class CharacterEntity : BaseNetworkGameCharacter
             return;
 
         isDead = false;
-        PowerUpBombRange = 0;
-        PowerUpBombAmount = 0;
-        PowerUpHeart = 0;
-        PowerUpMoveSpeed = 0;
-        PowerUpCanKickBomb = false;
-        if (characterData != null)
-        {
-            PowerUpBombRange += characterData.stats.bombRange;
-            PowerUpBombAmount += characterData.stats.bombAmount;
-            PowerUpHeart += characterData.stats.heart;
-            PowerUpMoveSpeed += characterData.stats.moveSpeed;
-            if (!PowerUpCanKickBomb)
-                PowerUpCanKickBomb = characterData.stats.canKickBomb;
-        }
+        var stats = new CharacterStats();
         if (headData != null)
-        {
-            PowerUpBombRange += headData.stats.bombRange;
-            PowerUpBombAmount += headData.stats.bombAmount;
-            PowerUpHeart += headData.stats.heart;
-            PowerUpMoveSpeed += headData.stats.moveSpeed;
-            if (!PowerUpCanKickBomb)
-                PowerUpCanKickBomb = headData.stats.canKickBomb;
-        }
+            stats += headData.stats;
+        if (characterData != null)
+            stats += characterData.stats;
         if (bombData != null)
+            stats += bombData.stats;
+        if (customEquipmentDict != null)
         {
-            PowerUpBombRange += bombData.stats.bombRange;
-            PowerUpBombAmount += bombData.stats.bombAmount;
-            PowerUpHeart += bombData.stats.heart;
-            PowerUpMoveSpeed += bombData.stats.moveSpeed;
-            if (!PowerUpCanKickBomb)
-                PowerUpCanKickBomb = bombData.stats.canKickBomb;
+            foreach (var value in customEquipmentDict.Values)
+                stats += value.stats;
         }
+        addStats = stats;
         bombs.Clear();
     }
 
-    public void CmdInit(int selectHead, int selectCharacter, int selectBomb, string extra)
+    public void CmdInit(int selectHead, int selectCharacter, int selectBomb, int[] selectCustomEquipments, string extra)
     {
-        photonView.RPC("RpcServerInit", PhotonTargets.MasterClient, selectHead, selectCharacter, selectBomb, extra);
+        photonView.RPC("RpcServerInit", PhotonTargets.MasterClient, selectHead, selectCharacter, selectBomb, selectCustomEquipments, extra);
     }
 
     [PunRPC]
-    protected void RpcServerInit(int selectHead, int selectCharacter, int selectBomb, string extra)
+    protected void RpcServerInit(int selectHead, int selectCharacter, int selectBomb, int[] selectCustomEquipments, string extra)
     {
         isDead = false;
         this.selectHead = selectHead;
         this.selectCharacter = selectCharacter;
         this.selectBomb = selectBomb;
+        this.selectCustomEquipments = selectCustomEquipments;
         this.extra = extra;
         var networkManager = BaseNetworkGameManager.Singleton;
         if (networkManager != null)
@@ -781,31 +717,6 @@ public class CharacterEntity : BaseNetworkGameCharacter
         _watchAdsCount = watchAdsCount;
     }
     [PunRPC]
-    protected virtual void RpcUpdatePowerUpBombRange(int powerUpBombRange)
-    {
-        _powerUpBombRange = powerUpBombRange;
-    }
-    [PunRPC]
-    protected virtual void RpcUpdatePowerUpBombAmount(int powerUpBombAmount)
-    {
-        _powerUpBombAmount = powerUpBombAmount;
-    }
-    [PunRPC]
-    protected virtual void RpcUpdatePowerUpHeart(int powerUpHeart)
-    {
-        _powerUpHeart = powerUpHeart;
-    }
-    [PunRPC]
-    protected virtual void RpcUpdatePowerUpMoveSpeed(int powerUpMoveSpeed)
-    {
-        _powerUpMoveSpeed = powerUpMoveSpeed;
-    }
-    [PunRPC]
-    protected virtual void RpcUpdateCanKickBomb(bool canKickBomb)
-    {
-        _powerUpCanKickBomb = canKickBomb;
-    }
-    [PunRPC]
     protected virtual void RpcUpdateIsDead(bool isDead)
     {
         if (!_isDead && isDead)
@@ -827,6 +738,14 @@ public class CharacterEntity : BaseNetworkGameCharacter
         characterModel.transform.localScale = Vector3.one;
         if (headData != null)
             characterModel.SetHeadModel(headData.modelObject);
+        if (customEquipmentDict != null)
+        {
+            characterModel.ClearCustomModels();
+            foreach (var value in customEquipmentDict.Values)
+            {
+                characterModel.SetCustomModel(value.containerIndex, value.modelObject);
+            }
+        }
         characterModel.gameObject.SetActive(true);
     }
     [PunRPC]
@@ -844,9 +763,33 @@ public class CharacterEntity : BaseNetworkGameCharacter
         bombData = GameInstance.GetBomb(selectBomb);
     }
     [PunRPC]
+    protected virtual void RpcUpdateSelectCustomEquipments(int[] selectCustomEquipments)
+    {
+        _selectCustomEquipments = selectCustomEquipments;
+        if (characterModel != null)
+            characterModel.ClearCustomModels();
+        customEquipmentDict.Clear();
+        for (var i = 0; i < _selectCustomEquipments.Length; ++i)
+        {
+            var customEquipmentData = GameInstance.GetCustomEquipment(_selectCustomEquipments[i]);
+            if (customEquipmentData != null &&
+                !customEquipmentDict.ContainsKey(customEquipmentData.containerIndex))
+            {
+                customEquipmentDict[customEquipmentData.containerIndex] = customEquipmentData;
+                if (characterModel != null)
+                    characterModel.SetCustomModel(customEquipmentData.containerIndex, customEquipmentData.modelObject);
+            }
+        }
+    }
+    [PunRPC]
     protected virtual void RpcUpdateIsInvincible(bool isInvincible)
     {
         _isInvincible = isInvincible;
+    }
+    [PunRPC]
+    protected virtual void RpcUpdateAddStats(string json)
+    {
+        _addStats = JsonUtility.FromJson<CharacterStats>(json);
     }
     [PunRPC]
     protected virtual void RpcUpdateExtra(string extra)

@@ -64,7 +64,11 @@ public class GameInstance : BaseNetworkGameInstance
         {
             CustomEquipments[customEquipment.GetHashId()] = customEquipment;
         }
+    }
 
+    protected override void Start()
+    {
+        base.Start();
         UpdateAvailableItems();
         ValidatePlayerSave();
     }
