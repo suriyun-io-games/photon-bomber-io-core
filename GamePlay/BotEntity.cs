@@ -1,6 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Photon.Pun;
+using Photon.Pun.UtilityScripts;
+using Photon.Realtime;
 
 public class BotEntity : CharacterEntity
 {
@@ -11,10 +14,10 @@ public class BotEntity : CharacterEntity
         get { return botPlayerName; }
         set
         {
-            if (PhotonNetwork.isMasterClient)
+            if (PhotonNetwork.IsMasterClient)
             {
                 botPlayerName = value;
-                photonView.RPC("RpcUpdateBotName", PhotonTargets.All, value);
+                photonView.RPC("RpcUpdateBotName", RpcTarget.All, value);
             }
         }
     }
@@ -24,10 +27,10 @@ public class BotEntity : CharacterEntity
         get { return botPlayerTeam; }
         set
         {
-            if (PhotonNetwork.isMasterClient)
+            if (PhotonNetwork.IsMasterClient)
             {
                 botPlayerTeam = value;
-                photonView.RPC("RpcUpdateBotTeam", PhotonTargets.Others, value);
+                photonView.RPC("RpcUpdateBotTeam", RpcTarget.Others, value);
             }
         }
     }
@@ -38,7 +41,7 @@ public class BotEntity : CharacterEntity
     protected override void Awake()
     {
         base.Awake();
-        if (PhotonNetwork.isMasterClient)
+        if (PhotonNetwork.IsMasterClient)
         {
             ServerSpawn(false);
             targetPosition = TempTransform.position;
@@ -48,18 +51,18 @@ public class BotEntity : CharacterEntity
 
     protected override void SyncData()
     {
-        if (!PhotonNetwork.isMasterClient)
+        if (!PhotonNetwork.IsMasterClient)
             return;
         base.SyncData();
-        photonView.RPC("RpcUpdateBotName", PhotonTargets.Others, botPlayerName);
-        photonView.RPC("RpcUpdateBotTeam", PhotonTargets.Others, botPlayerTeam);
+        photonView.RPC("RpcUpdateBotName", RpcTarget.Others, botPlayerName);
+        photonView.RPC("RpcUpdateBotTeam", RpcTarget.Others, botPlayerTeam);
     }
 
-    public override void OnPhotonPlayerConnected(PhotonPlayer newPlayer)
+    public override void OnPlayerEnteredRoom(Player newPlayer)
     {
-        if (!PhotonNetwork.isMasterClient)
+        if (!PhotonNetwork.IsMasterClient)
             return;
-        base.OnPhotonPlayerConnected(newPlayer);
+        base.OnPlayerEnteredRoom(newPlayer);
         photonView.RPC("RpcUpdateBotName", newPlayer, botPlayerName);
         photonView.RPC("RpcUpdateBotTeam", newPlayer, botPlayerTeam);
     }
@@ -81,7 +84,7 @@ public class BotEntity : CharacterEntity
 
     protected override void UpdateMovements()
     {
-        if (!PhotonNetwork.isMasterClient)
+        if (!PhotonNetwork.IsMasterClient)
             return;
 
         if (isDead)

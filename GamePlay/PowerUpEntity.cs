@@ -1,9 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Photon;
+using Photon.Pun;
 
-public class PowerUpEntity : PunBehaviour
+public class PowerUpEntity : MonoBehaviourPunCallbacks
 {
     public const float DestroyDelay = 1f;
     [Header("Stats / Currencies")]
@@ -31,9 +31,9 @@ public class PowerUpEntity : PunBehaviour
         {
             isDead = true;
             EffectEntity.PlayEffect(powerUpEffect, character.effectTransform);
-            if (PhotonNetwork.isMasterClient)
+            if (PhotonNetwork.IsMasterClient)
                 character.addStats += stats;
-            if (character.photonView.isMine && !(character is BotEntity))
+            if (character.photonView.IsMine && !(character is BotEntity))
             {
                 foreach (var currency in currencies)
                 {
@@ -53,7 +53,7 @@ public class PowerUpEntity : PunBehaviour
         }
         yield return new WaitForSeconds(DestroyDelay);
         // Destroy this on all clients
-        if (PhotonNetwork.isMasterClient)
+        if (PhotonNetwork.IsMasterClient)
             PhotonNetwork.Destroy(gameObject);
     }
 }

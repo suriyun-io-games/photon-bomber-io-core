@@ -1,9 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Photon;
+using Photon.Pun;
+using Photon.Realtime;
 
-public class BombEntity : PunBehaviour
+public class BombEntity : MonoBehaviourPunCallbacks
 {
     public const float DurationBeforeDestroy = 2f;
     protected int _addBombRange;
@@ -12,10 +13,10 @@ public class BombEntity : PunBehaviour
         get { return _addBombRange; }
         set
         {
-            if (PhotonNetwork.isMasterClient && value != addBombRange)
+            if (PhotonNetwork.IsMasterClient && value != addBombRange)
             {
                 _addBombRange = value;
-                photonView.RPC("RpcUpdateAddBombRange", PhotonTargets.Others, value);
+                photonView.RPC("RpcUpdateAddBombRange", RpcTarget.Others, value);
             }
         }
     }
@@ -25,10 +26,10 @@ public class BombEntity : PunBehaviour
         get { return _planterViewId; }
         set
         {
-            if (PhotonNetwork.isMasterClient && value != planterViewId)
+            if (PhotonNetwork.IsMasterClient && value != planterViewId)
             {
                 _planterViewId = value;
-                photonView.RPC("RpcUpdatePlanterViewId", PhotonTargets.Others, value);
+                photonView.RPC("RpcUpdatePlanterViewId", RpcTarget.Others, value);
             }
         }
     }
@@ -95,11 +96,11 @@ public class BombEntity : PunBehaviour
         TempCollider.isTrigger = true;
     }
 
-    public override void OnPhotonPlayerConnected(PhotonPlayer newPlayer)
+    public override void OnPlayerEnteredRoom(Player newPlayer)
     {
-        base.OnPhotonPlayerConnected(newPlayer);
-        if (!PhotonNetwork.isMasterClient)
+        if (!PhotonNetwork.IsMasterClient)
             return;
+        base.OnPlayerEnteredRoom(newPlayer);
         photonView.RPC("RpcUpdateAddBombRange", newPlayer, addBombRange);
         photonView.RPC("RpcUpdatePlanterViewId", newPlayer, planterViewId);
     }
@@ -145,7 +146,7 @@ public class BombEntity : PunBehaviour
 
     private void UpdateMovement()
     {
-        if (!PhotonNetwork.isMasterClient || TempRigidbody == null)
+        if (!PhotonNetwork.IsMasterClient || TempRigidbody == null)
             return;
 
         if (Mathf.Abs(_dirX) > 0 || Mathf.Abs(_dirZ) > 0)
@@ -171,7 +172,7 @@ public class BombEntity : PunBehaviour
         var characterEntity = collision.gameObject.GetComponent<CharacterEntity>();
         if (characterEntity != null)
         {
-            if (characterEntity.photonView.viewID == _kickerViewId)
+            if (characterEntity.photonView.ViewID == _kickerViewId)
                 return;
             _dirX = 0;
             _dirZ = 0;
@@ -210,7 +211,7 @@ public class BombEntity : PunBehaviour
     private void Explode()
     {
         // This flag, use to avoid unlimit loops, that can occurs when 2 bombs explode
-        if (Exploded || !PhotonNetwork.isMasterClient)
+        if (Exploded || !PhotonNetwork.IsMasterClient)
             return;
 
         Exploded = true;
@@ -230,7 +231,7 @@ public class BombEntity : PunBehaviour
         if (Planter != null)
             Planter.RemoveBomb(this);
 
-        photonView.RPC("RpcExplode", PhotonTargets.All, playingEffectPositions.ToArray());
+        photonView.RPC("RpcExplode", RpcTarget.All, playingEffectPositions.ToArray());
         StartCoroutine(Destroying());
     }
 
@@ -275,7 +276,7 @@ public class BombEntity : PunBehaviour
                     collideBrick = true;
             }
             // Next logics will work only on server only so skip it on client
-            if (PhotonNetwork.isMasterClient)
+            if (PhotonNetwork.IsMasterClient)
             {
                 // Take damage to the character
                 if (characterEntity != null)
@@ -333,7 +334,7 @@ public class BombEntity : PunBehaviour
             EffectEntity.PlayEffect(explosionEffect, position, Quaternion.identity);
         }
 
-        if (!PhotonNetwork.isMasterClient)
+        if (!PhotonNetwork.IsMasterClient)
         {
             TempCollider.isTrigger = true;
             var renderers = GetComponentsInChildren<Renderer>();

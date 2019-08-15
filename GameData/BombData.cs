@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Photon.Pun;
 
 public class BombData : ItemData
 {
@@ -18,7 +19,7 @@ public class BombData : ItemData
             position.y, 
             Mathf.RoundToInt(position.z));
         bombEntity.addBombRange = planter.PowerUpBombRange;
-        bombEntity.planterViewId = planter.photonView.viewID;
+        bombEntity.planterViewId = planter.photonView.ViewID;
         return bombEntity;
     }
 }

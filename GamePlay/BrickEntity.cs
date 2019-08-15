@@ -1,10 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Photon;
+using Photon.Pun;
+using Photon.Realtime;
 
 [RequireComponent(typeof(Collider))]
-public class BrickEntity : PunBehaviour
+public class BrickEntity : MonoBehaviourPunCallbacks
 {
     [Tooltip("Use this delay to play dead animation")]
     public float disableRenderersDelay;
@@ -16,10 +17,10 @@ public class BrickEntity : PunBehaviour
         get { return _isDead; }
         set
         {
-            if (PhotonNetwork.isMasterClient && value != isDead)
+            if (PhotonNetwork.IsMasterClient && value != isDead)
             {
                 _isDead = value;
-                photonView.RPC("RpcUpdateIsDead", PhotonTargets.Others, value);
+                photonView.RPC("RpcUpdateIsDead", RpcTarget.Others, value);
             }
         }
     }
@@ -31,10 +32,10 @@ public class BrickEntity : PunBehaviour
         get { return _isRendererDisabled; }
         set
         {
-            if (PhotonNetwork.isMasterClient && value != isRendererDisabled)
+            if (PhotonNetwork.IsMasterClient && value != isRendererDisabled)
             {
                 _isRendererDisabled = value;
-                photonView.RPC("RpcUpdateIsRendererDisabled", PhotonTargets.All, value);
+                photonView.RPC("RpcUpdateIsRendererDisabled", RpcTarget.All, value);
             }
         }
     }
@@ -66,11 +67,11 @@ public class BrickEntity : PunBehaviour
         gameObject.layer = GameInstance.Singleton.brickLayer;
     }
 
-    public override void OnPhotonPlayerConnected(PhotonPlayer newPlayer)
+    public override void OnPlayerEnteredRoom(Player newPlayer)
     {
-        base.OnPhotonPlayerConnected(newPlayer);
-        if (!PhotonNetwork.isMasterClient)
+        if (!PhotonNetwork.IsMasterClient)
             return;
+        base.OnPlayerEnteredRoom(newPlayer);
         photonView.RPC("RpcUpdateIsDead", newPlayer, isDead);
         photonView.RPC("RpcUpdateIsRendererDisabled", newPlayer, isRendererDisabled);
     }
@@ -79,7 +80,7 @@ public class BrickEntity : PunBehaviour
     {
         TempCollider.enabled = !isDead;
 
-        if (!PhotonNetwork.isMasterClient || !isDead)
+        if (!PhotonNetwork.IsMasterClient || !isDead)
             return;
 
         // Respawning.
@@ -90,21 +91,21 @@ public class BrickEntity : PunBehaviour
             isDead = false;
             if (animator != null)
                 animator.SetBool("IsDead", isDead);
-            photonView.RPC("RpcIsDeadChanged", PhotonTargets.Others, isDead);
+            photonView.RPC("RpcIsDeadChanged", RpcTarget.Others, isDead);
             isRendererDisabled = isDead;
         }
     }
 
     public void ReceiveDamage()
     {
-        if (!PhotonNetwork.isMasterClient || isDead)
+        if (!PhotonNetwork.IsMasterClient || isDead)
             return;
         deathTime = Time.unscaledTime;
         isDead = true;
         if (animator != null)
             animator.SetBool("IsDead", isDead);
         StartCoroutine(PlayDeadAnimation());
-        photonView.RPC("RpcIsDeadChanged", PhotonTargets.Others, isDead);
+        photonView.RPC("RpcIsDeadChanged", RpcTarget.Others, isDead);
         // Spawn powerup when it dead.
         GameplayManager.Singleton.SpawnPowerUp(TempTransform.position);
     }
@@ -120,7 +121,7 @@ public class BrickEntity : PunBehaviour
     private IEnumerator PlayDeadAnimation()
     {
         yield return new WaitForSeconds(disableRenderersDelay);
-        if (PhotonNetwork.isMasterClient)
+        if (PhotonNetwork.IsMasterClient)
         {
             isRendererDisabled = true;
             SetEnabledAllRenderer(!isRendererDisabled);
@@ -154,7 +155,7 @@ public class BrickEntity : PunBehaviour
     [PunRPC]
     private void RpcIsDeadChanged(bool isDead)
     {
-        if (PhotonNetwork.isMasterClient)
+        if (PhotonNetwork.IsMasterClient)
             return;
 
         if (!isDead)

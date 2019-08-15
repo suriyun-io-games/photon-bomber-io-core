@@ -1,10 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using Photon;
+using Photon.Pun;
+using Photon.Pun.UtilityScripts;
 
-public class GameplayManager : PunBehaviour
+public class GameplayManager : MonoBehaviourPunCallbacks
 {
     [System.Serializable]
     public struct RewardCurrency
@@ -59,7 +59,7 @@ public class GameplayManager : PunBehaviour
 
     public void SpawnPowerUp(Vector3 position)
     {
-        if (!PhotonNetwork.isMasterClient)
+        if (!PhotonNetwork.IsMasterClient)
             return;
         
         var randomizer = WeightedRandomizer.From(powerUpDropWeights);
