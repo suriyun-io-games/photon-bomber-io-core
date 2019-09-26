@@ -6,6 +6,12 @@ using Photon.Pun;
 
 public class UIMainMenu : MonoBehaviour
 {
+    public enum PreviewState
+    {
+        Idle,
+        Run,
+        Dead,
+    }
     public Text textSelectCharacter;
     public Text textSelectHead;
     public Text textSelectBomb;
@@ -16,9 +22,12 @@ public class UIMainMenu : MonoBehaviour
     private int selectHead = 0;
     private int selectBomb = 0;
     // Showing character / items
-    private CharacterModel characterModel;
-    private BombEntity bombEntity;
-    private HeadData headData;
+    public CharacterModel characterModel;
+    public BombEntity bombEntity;
+    public CharacterData characterData;
+    public HeadData headData;
+    public BombData bombData;
+    public PreviewState previewState;
 
     public int SelectCharacter
     {
@@ -90,13 +99,39 @@ public class UIMainMenu : MonoBehaviour
         textSelectCharacter.text = (SelectCharacter + 1) + "/" + (MaxCharacter + 1);
         textSelectHead.text = (SelectHead + 1) + "/" + (MaxHead + 1);
         textSelectBomb.text = (SelectBomb + 1) + "/" + (MaxBomb + 1);
+
+        if (characterModel != null)
+        {
+            var animator = characterModel.TempAnimator;
+            switch (previewState)
+            {
+                case PreviewState.Idle:
+                    animator.SetBool("IsDead", false);
+                    animator.SetFloat("JumpSpeed", 0);
+                    animator.SetFloat("MoveSpeed", 0);
+                    animator.SetBool("IsGround", true);
+                    break;
+                case PreviewState.Run:
+                    animator.SetBool("IsDead", false);
+                    animator.SetFloat("JumpSpeed", 0);
+                    animator.SetFloat("MoveSpeed", 1);
+                    animator.SetBool("IsGround", true);
+                    break;
+                case PreviewState.Dead:
+                    animator.SetBool("IsDead", true);
+                    animator.SetFloat("JumpSpeed", 0);
+                    animator.SetFloat("MoveSpeed", 0);
+                    animator.SetBool("IsGround", true);
+                    break;
+            }
+        }
     }
 
     private void UpdateCharacter()
     {
         if (characterModel != null)
             Destroy(characterModel.gameObject);
-        var characterData = GameInstance.GetAvailableCharacter(SelectCharacter);
+        characterData = GameInstance.GetAvailableCharacter(SelectCharacter);
         if (characterData == null || characterData.modelObject == null)
             return;
         characterModel = Instantiate(characterData.modelObject, characterModelTransform);
@@ -119,7 +154,7 @@ public class UIMainMenu : MonoBehaviour
     {
         if (bombEntity != null)
             Destroy(bombEntity.gameObject);
-        var bombData = GameInstance.GetAvailableBomb(SelectHead);
+        bombData = GameInstance.GetAvailableBomb(SelectHead);
         if (bombData == null || bombData.bombPrefab == null)
             return;
         bombEntity = Instantiate(bombData.bombPrefab, bombEntityTransform);
