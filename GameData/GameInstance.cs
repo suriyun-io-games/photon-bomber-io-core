@@ -64,13 +64,24 @@ public class GameInstance : BaseNetworkGameInstance
         {
             CustomEquipments[customEquipment.GetHashId()] = customEquipment;
         }
-    }
 
-    protected override void Start()
-    {
-        base.Start();
         UpdateAvailableItems();
         ValidatePlayerSave();
+    }
+
+    public void ValidatePlayerSave()
+    {
+        var head = PlayerSave.GetHead();
+        if (head < 0 || head >= AvailableHeads.Count)
+            PlayerSave.SetHead(0);
+
+        var character = PlayerSave.GetCharacter();
+        if (character < 0 || character >= AvailableCharacters.Count)
+            PlayerSave.SetCharacter(0);
+
+        var bomb = PlayerSave.GetBomb();
+        if (bomb < 0 || bomb >= AvailableBombs.Count)
+            PlayerSave.SetBomb(0);
     }
 
     public void UpdateAvailableItems()
@@ -102,21 +113,6 @@ public class GameInstance : BaseNetworkGameInstance
             if (customEquipment != null && customEquipment.IsUnlock())
                 AvailableCustomEquipments.Add(customEquipment);
         }
-    }
-
-    public void ValidatePlayerSave()
-    {
-        var head = PlayerSave.GetHead();
-        if (head < 0 || head >= AvailableHeads.Count)
-            PlayerSave.SetHead(0);
-
-        var character = PlayerSave.GetCharacter();
-        if (character < 0 || character >= AvailableCharacters.Count)
-            PlayerSave.SetCharacter(0);
-
-        var bomb = PlayerSave.GetBomb();
-        if (bomb < 0 || bomb >= AvailableBombs.Count)
-            PlayerSave.SetBomb(0);
     }
 
     public static HeadData GetHead(int key)
