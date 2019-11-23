@@ -21,6 +21,7 @@ public class UIMainMenu : MonoBehaviour
     private int selectCharacter = 0;
     private int selectHead = 0;
     private int selectBomb = 0;
+    private bool readyToUpdate;
     // Showing character / items
     public CharacterModel characterModel;
     public BombEntity bombEntity;
@@ -88,14 +89,21 @@ public class UIMainMenu : MonoBehaviour
 
     private void Start()
     {
-        inputName.text = PlayerSave.GetPlayerName();
-        SelectHead = PlayerSave.GetHead();
-        SelectCharacter = PlayerSave.GetCharacter();
-        SelectBomb = PlayerSave.GetBomb();
+        StartCoroutine(StartRoutine());
+    }
+
+    private IEnumerator StartRoutine()
+    {
+        yield return null;
+        OnClickLoadData();
+        readyToUpdate = true;
     }
 
     private void Update()
     {
+        if (!readyToUpdate)
+            return;
+
         textSelectCharacter.text = (SelectCharacter + 1) + "/" + (MaxCharacter + 1);
         textSelectHead.text = (SelectHead + 1) + "/" + (MaxHead + 1);
         textSelectBomb.text = (SelectBomb + 1) + "/" + (MaxBomb + 1);
@@ -206,6 +214,14 @@ public class UIMainMenu : MonoBehaviour
         PlayerSave.SetBomb(SelectBomb);
         PlayerSave.SetPlayerName(inputName.text);
         PhotonNetwork.LocalPlayer.NickName = PlayerSave.GetPlayerName();
+    }
+
+    public void OnClickLoadData()
+    {
+        inputName.text = PlayerSave.GetPlayerName();
+        SelectHead = PlayerSave.GetHead();
+        SelectCharacter = PlayerSave.GetCharacter();
+        SelectBomb = PlayerSave.GetBomb();
     }
 
     public void UpdateAvailableItems()
