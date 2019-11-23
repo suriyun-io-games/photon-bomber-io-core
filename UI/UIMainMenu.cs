@@ -162,7 +162,7 @@ public class UIMainMenu : MonoBehaviour
     {
         if (bombEntity != null)
             Destroy(bombEntity.gameObject);
-        bombData = GameInstance.GetAvailableBomb(SelectHead);
+        bombData = GameInstance.GetAvailableBomb(SelectBomb);
         if (bombData == null || bombData.bombPrefab == null)
             return;
         bombEntity = Instantiate(bombData.bombPrefab, bombEntityTransform);
