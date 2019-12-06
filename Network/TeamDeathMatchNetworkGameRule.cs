@@ -66,7 +66,7 @@ public class TeamDeathMatchNetworkGameRule : IONetworkGameRule
     {
         var targetCharacter = character as CharacterEntity;
         // In death match mode will not reset score, kill, assist, death
-        targetCharacter.addStats = new CharacterStats();
+        targetCharacter.Reset();
         targetCharacter.watchAdsCount = 0;
 
         return true;
