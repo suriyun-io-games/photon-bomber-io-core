@@ -181,37 +181,10 @@ public class CharacterEntity : BaseNetworkGameCharacter
                 canvas.enabled = !isHidding;
         }
     }
-
-    private Transform tempTransform;
-    public Transform TempTransform
-    {
-        get
-        {
-            if (tempTransform == null)
-                tempTransform = GetComponent<Transform>();
-            return tempTransform;
-        }
-    }
-    private Rigidbody tempRigidbody;
-    public Rigidbody TempRigidbody
-    {
-        get
-        {
-            if (tempRigidbody == null)
-                tempRigidbody = GetComponent<Rigidbody>();
-            return tempRigidbody;
-        }
-    }
-    private Collider tempCollider;
-    public Collider TempCollider
-    {
-        get
-        {
-            if (tempCollider == null)
-                tempCollider = GetComponent<Collider>();
-            return tempCollider;
-        }
-    }
+    
+    public Transform CacheTransform { get; private set; }
+    public Rigidbody CacheRigidbody { get; private set; }
+    public Collider CacheCollider { get; private set; }
 
     public int PowerUpBombRange
     {
@@ -290,12 +263,15 @@ public class CharacterEntity : BaseNetworkGameCharacter
     {
         base.Awake();
         gameObject.layer = GameInstance.Singleton.characterLayer;
+        CacheTransform = transform;
+        CacheRigidbody = GetComponent<Rigidbody>();
+        CacheCollider = GetComponent<Collider>();
         if (damageLaunchTransform == null)
-            damageLaunchTransform = TempTransform;
+            damageLaunchTransform = CacheTransform;
         if (effectTransform == null)
-            effectTransform = TempTransform;
+            effectTransform = CacheTransform;
         if (characterModelTransform == null)
-            characterModelTransform = TempTransform;
+            characterModelTransform = CacheTransform;
         foreach (var localPlayerObject in localPlayerObjects)
         {
             localPlayerObject.SetActive(false);
@@ -308,7 +284,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
         if (photonView.IsMine)
         {
             var followCam = FindObjectOfType<FollowCamera>();
-            followCam.target = TempTransform;
+            followCam.target = CacheTransform;
             targetCamera = followCam.GetComponent<Camera>();
             var uiGameplay = FindObjectOfType<UIGameplay>();
             if (uiGameplay != null)
@@ -374,16 +350,16 @@ public class CharacterEntity : BaseNetworkGameCharacter
             nameText.text = playerName;
         UpdateAnimation();
         UpdateInput();
-        TempCollider.enabled = PhotonNetwork.IsMasterClient || photonView.IsMine;
+        CacheCollider.enabled = PhotonNetwork.IsMasterClient || photonView.IsMine;
     }
 
     private void FixedUpdate()
     {
         if (!previousPosition.HasValue)
-            previousPosition = TempTransform.position;
-        var currentMove = TempTransform.position - previousPosition.Value;
+            previousPosition = CacheTransform.position;
+        var currentMove = CacheTransform.position - previousPosition.Value;
         currentVelocity = currentMove / Time.deltaTime;
-        previousPosition = TempTransform.position;
+        previousPosition = CacheTransform.position;
 
         if (NetworkManager != null && NetworkManager.IsMatchEnded)
             return;
@@ -411,7 +387,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
         if (kickingBomb == collision.gameObject.GetComponent<BombEntity>())
         {
             var moveDirNorm = currentMoveDirection.normalized;
-            var heading = kickingBomb.TempTransform.position - TempTransform.position;
+            var heading = kickingBomb.TempTransform.position - CacheTransform.position;
             var distance = heading.magnitude;
             var direction = heading / distance;
             
@@ -462,7 +438,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
         {
             inputMove = new Vector2(InputManager.GetAxis("Horizontal", false), InputManager.GetAxis("Vertical", false));
             if (InputManager.GetButtonDown("Fire1"))
-                CmdPlantBomb(RoundXZ(TempTransform.position));
+                CmdPlantBomb(RoundXZ(CacheTransform.position));
         }
     }
 
@@ -508,16 +484,16 @@ public class CharacterEntity : BaseNetworkGameCharacter
             var targetVelocity = direction * targetSpeed;
 
             // Apply a force that attempts to reach our target velocity
-            Vector3 velocity = TempRigidbody.velocity;
+            Vector3 velocity = CacheRigidbody.velocity;
             Vector3 velocityChange = (targetVelocity - velocity);
             velocityChange.x = Mathf.Clamp(velocityChange.x, -targetSpeed, targetSpeed);
             velocityChange.y = 0;
             velocityChange.z = Mathf.Clamp(velocityChange.z, -targetSpeed, targetSpeed);
-            TempRigidbody.AddForce(velocityChange, ForceMode.VelocityChange);
+            CacheRigidbody.AddForce(velocityChange, ForceMode.VelocityChange);
             
-            var rotateHeading = (TempTransform.position + direction) - TempTransform.position;
+            var rotateHeading = (CacheTransform.position + direction) - CacheTransform.position;
             var targetRotation = Quaternion.LookRotation(rotateHeading);
-            TempTransform.rotation = Quaternion.Lerp(TempTransform.rotation, targetRotation, Time.deltaTime * 6f);
+            CacheTransform.rotation = Quaternion.Lerp(CacheTransform.rotation, targetRotation, Time.deltaTime * 6f);
         }
     }
 
@@ -539,10 +515,10 @@ public class CharacterEntity : BaseNetworkGameCharacter
     
     public void ReceiveDamage(CharacterEntity attacker)
     {
-        var gameplayManager = GameplayManager.Singleton;
         if (isDead || isInvincible)
             return;
 
+        var gameplayManager = GameplayManager.Singleton;
         if (!gameplayManager.CanReceiveDamage(this, attacker))
             return;
 
@@ -553,8 +529,8 @@ public class CharacterEntity : BaseNetworkGameCharacter
             deathTime = Time.unscaledTime;
             ++dieCount;
             isDead = true;
-            var velocity = TempRigidbody.velocity;
-            TempRigidbody.velocity = new Vector3(0, velocity.y, 0);
+            var velocity = CacheRigidbody.velocity;
+            CacheRigidbody.velocity = new Vector3(0, velocity.y, 0);
         }
 
         if (addStats.heart > 0)
@@ -610,7 +586,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
             ServerInvincible();
             OnSpawn();
             var position = gameplayManager.GetCharacterSpawnPosition(this);
-            TempTransform.position = position;
+            CacheTransform.position = position;
             photonView.RPC("RpcTargetSpawn", photonView.Owner, position.x, position.y, position.z);
             isDead = false;
         }
@@ -701,8 +677,8 @@ public class CharacterEntity : BaseNetworkGameCharacter
     protected void RpcServerPlantBomb(Vector3 position)
     {
         // Avoid hacks
-        if (Vector3.Distance(position, TempTransform.position) > 3)
-            position = TempTransform.position;
+        if (Vector3.Distance(position, CacheTransform.position) > 3)
+            position = CacheTransform.position;
         if (bombs.Count >= 1 + PowerUpBombAmount || !BombEntity.CanPlant(position))
             return;
         if (bombData != null)
