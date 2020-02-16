@@ -106,7 +106,7 @@ public class GameplayManager : MonoBehaviourPunCallbacks
         var networkGameplayManager = BaseNetworkGameManager.Singleton;
         if (networkGameplayManager != null)
         {
-            if (networkGameplayManager.gameRule != null && networkGameplayManager.gameRule.IsTeamGameplay)
+            if (networkGameplayManager.gameRule != null && networkGameplayManager.gameRule.IsTeamGameplay && attacker)
                 return damageReceiver.playerTeam != attacker.playerTeam;
             if (networkGameplayManager.IsMatchEnded)
                 return false;
