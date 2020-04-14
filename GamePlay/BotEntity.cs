@@ -21,8 +21,8 @@ public class BotEntity : CharacterEntity
             }
         }
     }
-    protected PunTeams.Team botPlayerTeam;
-    public override PunTeams.Team playerTeam
+    protected byte botPlayerTeam;
+    public override byte playerTeam
     {
         get { return botPlayerTeam; }
         set
@@ -303,7 +303,7 @@ public class BotEntity : CharacterEntity
     }
 
     [PunRPC]
-    protected void RpcUpdateBotTeam(PunTeams.Team team)
+    protected void RpcUpdateBotTeam(byte team)
     {
         botPlayerTeam = team;
     }
