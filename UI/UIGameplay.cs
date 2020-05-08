@@ -22,6 +22,16 @@ public class UIGameplay : MonoBehaviour
     private bool isNetworkActiveDirty;
     private bool isRespawnShown;
 
+    private void Start()
+    {
+        if (BaseNetworkGameCharacter.Local != null)
+        {
+            if (blackFade != null && blackFade.blackFade != null)
+                blackFade.blackFade.alpha = 1;
+            FadeOut();
+        }
+    }
+
     private void Update()
     {
         foreach (var mobileOnlyUi in mobileOnlyUis)
