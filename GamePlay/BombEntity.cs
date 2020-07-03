@@ -35,6 +35,9 @@ public class BombEntity : MonoBehaviourPunCallbacks
     }
     public AudioClip explosionSound;
     public EffectEntity explosionEffect;
+    public float radius = 0.4f;
+    public float explosionForceRadius = 0f;
+    public float explosionForce = 0f;
     public float lifeTime = 2f;
     public float kickMoveSpeed = 5f;
     public bool canExplodeThroughBricks;
@@ -58,42 +61,18 @@ public class BombEntity : MonoBehaviourPunCallbacks
             return planter;
         }
     }
-    private Transform tempTransform;
-    public Transform TempTransform
-    {
-        get
-        {
-            if (tempTransform == null)
-                tempTransform = GetComponent<Transform>();
-            return tempTransform;
-        }
-    }
-    private Rigidbody tempRigidbody;
-    public Rigidbody TempRigidbody
-    {
-        get
-        {
-            if (tempRigidbody == null)
-                tempRigidbody = GetComponent<Rigidbody>();
-            return tempRigidbody;
-        }
-    }
-    private Collider tempCollider;
-    public Collider TempCollider
-    {
-        get
-        {
-            if (tempCollider == null)
-                tempCollider = GetComponent<Collider>();
-            return tempCollider;
-        }
-    }
+    public Transform CacheTransform { get; private set; }
+    public Rigidbody CacheRigidbody { get; private set; }
+    public Collider CacheCollider { get; private set; }
 
     private void Awake()
     {
         gameObject.layer = GameInstance.Singleton.bombLayer;
+        CacheTransform = GetComponent<Transform>();
+        CacheRigidbody = GetComponent<Rigidbody>();
+        CacheCollider = GetComponent<Collider>();
         StartCoroutine(Exploding());
-        TempCollider.isTrigger = true;
+        CacheCollider.isTrigger = true;
     }
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
@@ -107,18 +86,18 @@ public class BombEntity : MonoBehaviourPunCallbacks
 
     private void Start()
     {
-        var collideObjects = Physics.OverlapSphere(TempTransform.position, 0.4f);
+        var collideObjects = Physics.OverlapSphere(CacheTransform.position, 0.4f);
         ignoredCharacters = new List<CharacterEntity>();
         foreach (var collideObject in collideObjects)
         {
             var character = collideObject.GetComponent<CharacterEntity>();
             if (character != null)
             {
-                Physics.IgnoreCollision(character.CacheCollider, TempCollider, true);
+                Physics.IgnoreCollision(character.CacheCollider, CacheCollider, true);
                 ignoredCharacters.Add(character);
             }
         }
-        TempCollider.isTrigger = false;
+        CacheCollider.isTrigger = false;
     }
 
     private void FixedUpdate()
@@ -126,7 +105,7 @@ public class BombEntity : MonoBehaviourPunCallbacks
         if (Exploded)
             return;
 
-        var collideObjects = Physics.OverlapSphere(TempTransform.position, 0.4f);
+        var collideObjects = Physics.OverlapSphere(CacheTransform.position, 0.4f);
         var newIgnoreList = new List<CharacterEntity>();
         foreach (var collideObject in collideObjects)
         {
@@ -137,7 +116,7 @@ public class BombEntity : MonoBehaviourPunCallbacks
         foreach (var ignoredCharacter in ignoredCharacters)
         {
             if (ignoredCharacter != null && !newIgnoreList.Contains(ignoredCharacter))
-                Physics.IgnoreCollision(ignoredCharacter.CacheCollider, TempCollider, false);
+                Physics.IgnoreCollision(ignoredCharacter.CacheCollider, CacheCollider, false);
         }
         ignoredCharacters = newIgnoreList;
 
@@ -146,24 +125,24 @@ public class BombEntity : MonoBehaviourPunCallbacks
 
     private void UpdateMovement()
     {
-        if (!PhotonNetwork.IsMasterClient || TempRigidbody == null)
+        if (!PhotonNetwork.IsMasterClient || CacheRigidbody == null)
             return;
 
         if (Mathf.Abs(_dirX) > 0 || Mathf.Abs(_dirZ) > 0)
         {
-            TempRigidbody.isKinematic = false;
+            CacheRigidbody.isKinematic = false;
             Vector3 targetVelocity = new Vector3(_dirX, 0, _dirZ) * kickMoveSpeed;
             // Apply a force that attempts to reach our target velocity
-            Vector3 velocity = TempRigidbody.velocity;
+            Vector3 velocity = CacheRigidbody.velocity;
             Vector3 velocityChange = (targetVelocity - velocity);
             velocityChange.x = Mathf.Clamp(velocityChange.x, -kickMoveSpeed, kickMoveSpeed);
             velocityChange.y = 0;
             velocityChange.z = Mathf.Clamp(velocityChange.z, -kickMoveSpeed, kickMoveSpeed);
-            TempRigidbody.AddForce(velocityChange, ForceMode.VelocityChange);
+            CacheRigidbody.AddForce(velocityChange, ForceMode.VelocityChange);
         }
         else
         {
-            TempRigidbody.isKinematic = true;
+            CacheRigidbody.isKinematic = true;
         }
     }
 
@@ -200,7 +179,7 @@ public class BombEntity : MonoBehaviourPunCallbacks
 
     private IEnumerator Destroying()
     {
-        TempCollider.enabled = false;
+        CacheCollider.enabled = false;
         var renderers = GetComponentsInChildren<Renderer>();
         foreach (var renderer in renderers)
             renderer.enabled = false;
@@ -217,9 +196,9 @@ public class BombEntity : MonoBehaviourPunCallbacks
         Exploded = true;
         List<Vector3> playingEffectPositions = new List<Vector3>();
         // Create explosion at bomb
-        var position = TempTransform.position;
-        var isPlayingEffect = false;
-        var hitBrickOrWall = false;
+        var position = CacheTransform.position;
+        bool isPlayingEffect;
+        bool hitBrickOrWall;
         CreateExplosion(position, out isPlayingEffect, out hitBrickOrWall);
         playingEffectPositions.Add(position);
         // Create explosion around bomb
@@ -237,7 +216,7 @@ public class BombEntity : MonoBehaviourPunCallbacks
 
     private void DrawBombGizmos()
     {
-        var center = TempTransform.position;
+        var center = CacheTransform.position;
         var size = Vector3.one;
         Gizmos.DrawWireCube(center, size);
         Gizmos.DrawWireCube(center + Vector3.forward, size);
@@ -250,14 +229,14 @@ public class BombEntity : MonoBehaviourPunCallbacks
     {
         // Find colliding objects, add up position relates to radius
         // Radius should not be fit to the gaps between bomb (1), so I set it to 0.4 (*2 = 0.8 = not fit to the gaps)
-        var collidedObjects = Physics.OverlapSphere(position + Vector3.up * 0.1f, 0.4f);
+        var collidedObjects = Physics.OverlapSphere(position + Vector3.up * 0.1f, radius);
         // hit wall if it's hitting something
         var collideWalls = collidedObjects.Length > 0;
         var collideBrick = false;
-        CharacterEntity characterEntity = null;
-        PowerUpEntity powerUpEntity = null;
-        BombEntity bombEntity = null;
-        BrickEntity brickEntity = null;
+        CharacterEntity characterEntity;
+        PowerUpEntity powerUpEntity;
+        BombEntity bombEntity;
+        BrickEntity brickEntity;
         foreach (var collidedObject in collidedObjects)
         {
             characterEntity = collidedObject.GetComponent<CharacterEntity>();
@@ -276,19 +255,29 @@ public class BombEntity : MonoBehaviourPunCallbacks
                     collideBrick = true;
             }
             // Next logics will work only on server only so skip it on client
-            if (PhotonNetwork.IsMasterClient)
+            // Take damage to the character
+            if (characterEntity != null)
             {
-                // Take damage to the character
-                if (characterEntity != null)
+                if (PhotonNetwork.IsMasterClient)
                     characterEntity.ReceiveDamage(Planter);
-                // Take damage to the brick
-                if (brickEntity != null)
+                characterEntity.CacheRigidbody.AddExplosionForce(explosionForce, CacheTransform.position, explosionForceRadius);
+            }
+            // Take damage to the brick
+            if (brickEntity != null)
+            {
+                if (PhotonNetwork.IsMasterClient)
                     brickEntity.ReceiveDamage();
-                // Destroy powerup
-                if (powerUpEntity != null)
+            }
+            // Destroy powerup
+            if (powerUpEntity != null)
+            {
+                if (PhotonNetwork.IsMasterClient)
                     PhotonNetwork.Destroy(powerUpEntity.gameObject);
-                // Make chains explode
-                if (bombEntity != null && bombEntity != this && !bombEntity.Exploded)
+            }
+            // Make chains explode
+            if (bombEntity != null && bombEntity != this && !bombEntity.Exploded)
+            {
+                if (PhotonNetwork.IsMasterClient)
                     bombEntity.Explode();
             }
         }
@@ -300,9 +289,9 @@ public class BombEntity : MonoBehaviourPunCallbacks
     {
         for (int i = 1; i <= 1 + addBombRange; i++)
         {
-            var position = TempTransform.position + (direction * i);
-            var isPlayingEffect = false;
-            var hitBrickOrWall = false;
+            var position = CacheTransform.position + (direction * i);
+            bool isPlayingEffect;
+            bool hitBrickOrWall;
             CreateExplosion(position, out isPlayingEffect, out hitBrickOrWall);
             if (isPlayingEffect)
                 appendingEffectPositions.Add(position);
@@ -336,7 +325,7 @@ public class BombEntity : MonoBehaviourPunCallbacks
 
         if (!PhotonNetwork.IsMasterClient)
         {
-            TempCollider.isTrigger = true;
+            CacheCollider.isTrigger = true;
             var renderers = GetComponentsInChildren<Renderer>();
             foreach (var renderer in renderers)
                 renderer.enabled = false;
