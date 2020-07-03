@@ -387,7 +387,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
         if (kickingBomb == collision.gameObject.GetComponent<BombEntity>())
         {
             var moveDirNorm = currentMoveDirection.normalized;
-            var heading = kickingBomb.TempTransform.position - CacheTransform.position;
+            var heading = kickingBomb.CacheTransform.position - CacheTransform.position;
             var distance = heading.magnitude;
             var direction = heading / distance;
             
@@ -475,22 +475,19 @@ public class CharacterEntity : BaseNetworkGameCharacter
 
     protected virtual void Move(Vector3 direction)
     {
-        if (direction.magnitude > 0)
+        if (direction.sqrMagnitude > 0)
         {
-            if (direction.magnitude > 1)
+            if (direction.sqrMagnitude > 1)
                 direction = direction.normalized;
+            direction.y = 0;
 
             var targetSpeed = GetMoveSpeed();
             var targetVelocity = direction * targetSpeed;
+            var rigidbodyVel = CacheRigidbody.velocity;
+            rigidbodyVel.y = 0;
+            if (rigidbodyVel.sqrMagnitude < 1)
+                CacheTransform.position += targetVelocity * Time.deltaTime;
 
-            // Apply a force that attempts to reach our target velocity
-            Vector3 velocity = CacheRigidbody.velocity;
-            Vector3 velocityChange = (targetVelocity - velocity);
-            velocityChange.x = Mathf.Clamp(velocityChange.x, -targetSpeed, targetSpeed);
-            velocityChange.y = 0;
-            velocityChange.z = Mathf.Clamp(velocityChange.z, -targetSpeed, targetSpeed);
-            CacheRigidbody.AddForce(velocityChange, ForceMode.VelocityChange);
-            
             var rotateHeading = (CacheTransform.position + direction) - CacheTransform.position;
             var targetRotation = Quaternion.LookRotation(rotateHeading);
             CacheTransform.rotation = Quaternion.Lerp(CacheTransform.rotation, targetRotation, Time.deltaTime * 6f);
