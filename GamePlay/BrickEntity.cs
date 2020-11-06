@@ -20,7 +20,7 @@ public class BrickEntity : MonoBehaviourPunCallbacks
             if (PhotonNetwork.IsMasterClient && value != isDead)
             {
                 _isDead = value;
-                photonView.RPC("RpcUpdateIsDead", RpcTarget.Others, value);
+                photonView.OthersRPC(RpcUpdateIsDead, value);
             }
         }
     }
@@ -35,7 +35,7 @@ public class BrickEntity : MonoBehaviourPunCallbacks
             if (PhotonNetwork.IsMasterClient && value != isRendererDisabled)
             {
                 _isRendererDisabled = value;
-                photonView.RPC("RpcUpdateIsRendererDisabled", RpcTarget.All, value);
+                photonView.AllRPC(RpcUpdateIsRendererDisabled, value);
             }
         }
     }
@@ -72,8 +72,8 @@ public class BrickEntity : MonoBehaviourPunCallbacks
         if (!PhotonNetwork.IsMasterClient)
             return;
         base.OnPlayerEnteredRoom(newPlayer);
-        photonView.RPC("RpcUpdateIsDead", newPlayer, isDead);
-        photonView.RPC("RpcUpdateIsRendererDisabled", newPlayer, isRendererDisabled);
+        photonView.TargetRPC(RpcUpdateIsDead, newPlayer, isDead);
+        photonView.TargetRPC(RpcUpdateIsRendererDisabled, newPlayer, isRendererDisabled);
     }
 
     private void Update()
@@ -91,7 +91,7 @@ public class BrickEntity : MonoBehaviourPunCallbacks
             isDead = false;
             if (animator != null)
                 animator.SetBool("IsDead", isDead);
-            photonView.RPC("RpcIsDeadChanged", RpcTarget.Others, isDead);
+            photonView.OthersRPC(RpcIsDeadChanged, isDead);
             isRendererDisabled = isDead;
         }
     }
@@ -105,7 +105,7 @@ public class BrickEntity : MonoBehaviourPunCallbacks
         if (animator != null)
             animator.SetBool("IsDead", isDead);
         StartCoroutine(PlayDeadAnimation());
-        photonView.RPC("RpcIsDeadChanged", RpcTarget.Others, isDead);
+        photonView.OthersRPC(RpcIsDeadChanged, isDead);
         // Spawn powerup when it dead.
         GameplayManager.Singleton.SpawnPowerUp(TempTransform.position);
     }

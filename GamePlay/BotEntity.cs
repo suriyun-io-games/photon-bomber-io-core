@@ -17,7 +17,7 @@ public class BotEntity : CharacterEntity
             if (PhotonNetwork.IsMasterClient)
             {
                 botPlayerName = value;
-                photonView.RPC("RpcUpdateBotName", RpcTarget.All, value);
+                photonView.AllRPC(RpcUpdateBotName, value);
             }
         }
     }
@@ -30,10 +30,15 @@ public class BotEntity : CharacterEntity
             if (PhotonNetwork.IsMasterClient)
             {
                 botPlayerTeam = value;
-                photonView.RPC("RpcUpdateBotTeam", RpcTarget.Others, value);
+                photonView.OthersRPC(RpcUpdateBotTeam, value);
             }
         }
     }
+    public override bool IsBot
+    {
+        get { return true; }
+    }
+
     private Queue<Vector3> waypoints = new Queue<Vector3>();
     private Vector3 targetPosition;
     private BombEntity bomb;
@@ -54,8 +59,8 @@ public class BotEntity : CharacterEntity
         if (!PhotonNetwork.IsMasterClient)
             return;
         base.SyncData();
-        photonView.RPC("RpcUpdateBotName", RpcTarget.Others, botPlayerName);
-        photonView.RPC("RpcUpdateBotTeam", RpcTarget.Others, botPlayerTeam);
+        photonView.OthersRPC(RpcUpdateBotName, botPlayerName);
+        photonView.OthersRPC(RpcUpdateBotTeam, botPlayerTeam);
     }
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
@@ -63,8 +68,8 @@ public class BotEntity : CharacterEntity
         if (!PhotonNetwork.IsMasterClient)
             return;
         base.OnPlayerEnteredRoom(newPlayer);
-        photonView.RPC("RpcUpdateBotName", newPlayer, botPlayerName);
-        photonView.RPC("RpcUpdateBotTeam", newPlayer, botPlayerTeam);
+        photonView.TargetRPC(RpcUpdateBotName, newPlayer, botPlayerName);
+        photonView.TargetRPC(RpcUpdateBotTeam, newPlayer, botPlayerTeam);
     }
 
     // Override to do nothing

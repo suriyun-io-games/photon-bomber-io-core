@@ -16,7 +16,7 @@ public class BombEntity : MonoBehaviourPunCallbacks
             if (PhotonNetwork.IsMasterClient && value != addBombRange)
             {
                 _addBombRange = value;
-                photonView.RPC("RpcUpdateAddBombRange", RpcTarget.Others, value);
+                photonView.OthersRPC(RpcUpdateAddBombRange, value);
             }
         }
     }
@@ -29,7 +29,7 @@ public class BombEntity : MonoBehaviourPunCallbacks
             if (PhotonNetwork.IsMasterClient && value != planterViewId)
             {
                 _planterViewId = value;
-                photonView.RPC("RpcUpdatePlanterViewId", RpcTarget.Others, value);
+                photonView.OthersRPC(RpcUpdatePlanterViewId, value);
             }
         }
     }
@@ -80,8 +80,8 @@ public class BombEntity : MonoBehaviourPunCallbacks
         if (!PhotonNetwork.IsMasterClient)
             return;
         base.OnPlayerEnteredRoom(newPlayer);
-        photonView.RPC("RpcUpdateAddBombRange", newPlayer, addBombRange);
-        photonView.RPC("RpcUpdatePlanterViewId", newPlayer, planterViewId);
+        photonView.TargetRPC(RpcUpdateAddBombRange, newPlayer, addBombRange);
+        photonView.TargetRPC(RpcUpdatePlanterViewId, newPlayer, planterViewId);
     }
 
     private void Start()
@@ -210,7 +210,7 @@ public class BombEntity : MonoBehaviourPunCallbacks
         if (Planter != null)
             Planter.RemoveBomb(this);
 
-        photonView.RPC("RpcExplode", RpcTarget.All, playingEffectPositions.ToArray());
+        photonView.AllRPC(RpcExplode, playingEffectPositions.ToArray());
         StartCoroutine(Destroying());
     }
 
