@@ -19,18 +19,7 @@ public class UIGameplay : MonoBehaviour
     public UIKillNotifies uiKillNotifies;
     public GameObject matchEndUi;
     public GameObject[] mobileOnlyUis;
-    private bool isNetworkActiveDirty;
     private bool isRespawnShown;
-
-    private void Start()
-    {
-        if (BaseNetworkGameCharacter.Local != null)
-        {
-            if (blackFade != null && blackFade.blackFade != null)
-                blackFade.blackFade.alpha = 1;
-            FadeOut();
-        }
-    }
 
     private void Update()
     {
