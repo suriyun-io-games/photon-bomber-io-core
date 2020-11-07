@@ -303,7 +303,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
 
     IEnumerator DelayReady()
     {
-        yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(0.5f);
         // Add some delay before ready to make sure that it can receive team and game rule
         // TODO: Should improve this (Or remake team system, one which made by Photon is not work well)
         var uiGameplay = FindObjectOfType<UIGameplay>();
