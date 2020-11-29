@@ -21,19 +21,7 @@ public class BotEntity : CharacterEntity
             }
         }
     }
-    protected byte botPlayerTeam;
-    public override byte playerTeam
-    {
-        get { return botPlayerTeam; }
-        set
-        {
-            if (PhotonNetwork.IsMasterClient)
-            {
-                botPlayerTeam = value;
-                photonView.OthersRPC(RpcUpdateBotTeam, value);
-            }
-        }
-    }
+
     public override bool IsBot
     {
         get { return true; }
@@ -60,7 +48,6 @@ public class BotEntity : CharacterEntity
             return;
         base.SyncData();
         photonView.OthersRPC(RpcUpdateBotName, botPlayerName);
-        photonView.OthersRPC(RpcUpdateBotTeam, botPlayerTeam);
     }
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
@@ -69,7 +56,6 @@ public class BotEntity : CharacterEntity
             return;
         base.OnPlayerEnteredRoom(newPlayer);
         photonView.TargetRPC(RpcUpdateBotName, newPlayer, botPlayerName);
-        photonView.TargetRPC(RpcUpdateBotTeam, newPlayer, botPlayerTeam);
     }
 
     // Override to do nothing
@@ -300,11 +286,5 @@ public class BotEntity : CharacterEntity
     protected void RpcUpdateBotName(string name)
     {
         botPlayerName = name;
-    }
-
-    [PunRPC]
-    protected void RpcUpdateBotTeam(byte team)
-    {
-        botPlayerTeam = team;
     }
 }
