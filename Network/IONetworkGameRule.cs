@@ -29,10 +29,6 @@ public class IONetworkGameRule : BaseNetworkGameRule
         return botEntity;
     }
 
-    protected override void EndMatch()
-    {
-    }
-
     public override bool CanCharacterRespawn(BaseNetworkGameCharacter character, params object[] extraParams)
     {
         var gameplayManager = GameplayManager.Singleton;
