@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class DeathMatchNetworkGameRule : IONetworkGameRule
 {
@@ -18,7 +16,8 @@ public class DeathMatchNetworkGameRule : IONetworkGameRule
     public override void OnStopConnection(BaseNetworkGameManager manager)
     {
         base.OnStopConnection(manager);
-        MatchRewardHandler.SetRewards(BaseNetworkGameCharacter.LocalRank, rewards);
+        if (IsMatchEnded)
+            MatchRewardHandler.SetRewards(BaseNetworkGameCharacter.LocalRank, rewards);
     }
 
     public override bool RespawnCharacter(BaseNetworkGameCharacter character, params object[] extraParams)
