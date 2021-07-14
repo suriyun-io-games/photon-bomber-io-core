@@ -71,7 +71,7 @@ public class GameplayManager : MonoBehaviourPunCallbacks
     public void SpawnPowerUp(PowerUpEntity powerUpPrefab, Vector3 position)
     {
         if (powerUpPrefab != null)
-            PhotonNetwork.InstantiateSceneObject(powerUpPrefab.name, position, Quaternion.identity, 0, new object[0]);
+            PhotonNetwork.InstantiateRoomObject(powerUpPrefab.name, position, Quaternion.identity, 0, new object[0]);
     }
 
     public Vector3 GetCharacterSpawnPosition(CharacterEntity character)

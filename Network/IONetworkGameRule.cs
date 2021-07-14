@@ -20,7 +20,7 @@ public class IONetworkGameRule : BaseNetworkGameRule
         var gameInstance = GameInstance.Singleton;
         var botList = gameInstance.bots;
         var bot = botList[Random.Range(0, botList.Length)];
-        var botGo = PhotonNetwork.InstantiateSceneObject(gameInstance.botPrefab.name, Vector3.zero, Quaternion.identity, 0, new object[0]);
+        var botGo = PhotonNetwork.InstantiateRoomObject(gameInstance.botPrefab.name, Vector3.zero, Quaternion.identity, 0, new object[0]);
         var botEntity = botGo.GetComponent<BotEntity>();
         botEntity.playerName = bot.name;
         botEntity.selectHead = bot.GetSelectHead();

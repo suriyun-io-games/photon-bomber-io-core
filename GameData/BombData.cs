@@ -12,7 +12,7 @@ public class BombData : ItemData
         if (planter == null)
             return null;
 
-        var bombEntityGo = PhotonNetwork.InstantiateSceneObject(bombPrefab.name, position, Quaternion.identity, 0, new object[0]);
+        var bombEntityGo = PhotonNetwork.InstantiateRoomObject(bombPrefab.name, position, Quaternion.identity, 0, new object[0]);
         var bombEntity = bombEntityGo.GetComponent<BombEntity>();
         bombEntity.transform.position = new Vector3(
             Mathf.RoundToInt(position.x),
