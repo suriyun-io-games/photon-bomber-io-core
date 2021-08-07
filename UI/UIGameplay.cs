@@ -50,7 +50,7 @@ public class UIGameplay : MonoBehaviour
         if (textPowerUpMoveSpeed != null)
             textPowerUpMoveSpeed.text = localCharacter.PowerUpMoveSpeed.ToString("N0") + "/" + gameplayManager.maxMoveSpeedPowerUp;
 
-        if (localCharacter.isDead)
+        if (localCharacter.IsDeadMarked)
         {
             if (!isRespawnShown)
             {
@@ -67,7 +67,7 @@ public class UIGameplay : MonoBehaviour
                 if (textRespawnCountDown != null)
                     textRespawnCountDown.text = Mathf.Abs(remainTime).ToString("N0");
                 if (textWatchedAdsCount != null)
-                    textWatchedAdsCount.text = (watchAdsRespawnAvailable - localCharacter.watchAdsCount) + "/" + watchAdsRespawnAvailable;
+                    textWatchedAdsCount.text = (watchAdsRespawnAvailable - localCharacter.WatchAdsCount) + "/" + watchAdsRespawnAvailable;
                 if (respawnButtonContainer != null)
                     respawnButtonContainer.SetActive(remainTime == 0);
             }
@@ -142,7 +142,7 @@ public class UIGameplay : MonoBehaviour
         if (character == null)
             return;
 
-        if (character.watchAdsCount >= GameplayManager.Singleton.watchAdsRespawnAvailable)
+        if (character.WatchAdsCount >= GameplayManager.Singleton.watchAdsRespawnAvailable)
         {
             character.CmdRespawn(false);
             return;

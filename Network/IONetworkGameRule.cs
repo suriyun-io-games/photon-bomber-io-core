@@ -22,10 +22,10 @@ public class IONetworkGameRule : BaseNetworkGameRule
         var bot = botList[Random.Range(0, botList.Length)];
         var botGo = PhotonNetwork.InstantiateRoomObject(gameInstance.botPrefab.name, Vector3.zero, Quaternion.identity, 0, new object[0]);
         var botEntity = botGo.GetComponent<BotEntity>();
-        botEntity.playerName = bot.name;
-        botEntity.selectHead = bot.GetSelectHead();
-        botEntity.selectCharacter = bot.GetSelectCharacter();
-        botEntity.selectBomb = bot.GetSelectBomb();
+        botEntity.PlayerName = bot.name;
+        botEntity.SelectHead = bot.GetSelectHead();
+        botEntity.SelectCharacter = bot.GetSelectCharacter();
+        botEntity.SelectBomb = bot.GetSelectBomb();
         return botEntity;
     }
 
@@ -44,7 +44,7 @@ public class IONetworkGameRule : BaseNetworkGameRule
 
         var targetCharacter = character as CharacterEntity;
         var gameplayManager = GameplayManager.Singleton;
-        if (!isWatchedAds || targetCharacter.watchAdsCount >= gameplayManager.watchAdsRespawnAvailable)
+        if (!isWatchedAds || targetCharacter.WatchAdsCount >= gameplayManager.watchAdsRespawnAvailable)
         {
             targetCharacter.ResetScore();
             targetCharacter.ResetKillCount();
@@ -53,7 +53,7 @@ public class IONetworkGameRule : BaseNetworkGameRule
         }
         else
         {
-            ++targetCharacter.watchAdsCount;
+            ++targetCharacter.WatchAdsCount;
         }
 
         return true;

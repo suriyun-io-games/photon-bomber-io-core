@@ -1,8 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
-using Photon.Pun.UtilityScripts;
 
 public class GameplayManager : MonoBehaviourPunCallbacks
 {
@@ -78,12 +76,12 @@ public class GameplayManager : MonoBehaviourPunCallbacks
     {
         // TODO: Improve team codes
 
-        if (character.playerTeam == 1 &&
+        if (character.PlayerTeam == 1 &&
             characterSpawnPositionsForTeamA != null &&
             characterSpawnPositionsForTeamA.Length > 0)
             return characterSpawnPositionsForTeamA[Random.Range(0, characterSpawnPositionsForTeamA.Length)].position;
 
-        if (character.playerTeam == 2 &&
+        if (character.PlayerTeam == 2 &&
             characterSpawnPositionsForTeamB != null &&
             characterSpawnPositionsForTeamB.Length > 0)
             return characterSpawnPositionsForTeamB[Random.Range(0, characterSpawnPositionsForTeamB.Length)].position;
@@ -109,7 +107,7 @@ public class GameplayManager : MonoBehaviourPunCallbacks
         if (networkGameplayManager != null)
         {
             if (networkGameplayManager.gameRule != null && networkGameplayManager.gameRule.IsTeamGameplay && attacker)
-                return damageReceiver.playerTeam != attacker.playerTeam;
+                return damageReceiver.PlayerTeam != attacker.PlayerTeam;
             if (networkGameplayManager.IsMatchEnded)
                 return false;
         }

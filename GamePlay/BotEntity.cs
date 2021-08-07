@@ -2,24 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
-using Photon.Pun.UtilityScripts;
 using Photon.Realtime;
 
 public class BotEntity : CharacterEntity
 {
     public const float ReachedTargetDistance = 0.1f;
-    protected string botPlayerName;
-    public override string playerName
+    private SyncBotNameRpcComponent syncBotName = null;
+    public override string PlayerName
     {
-        get { return botPlayerName; }
-        set
-        {
-            if (PhotonNetwork.IsMasterClient)
-            {
-                botPlayerName = value;
-                photonView.AllRPC(RpcUpdateBotName, value);
-            }
-        }
+        get { return syncBotName.Value; }
+        set { syncBotName.Value = value; }
     }
 
     public override bool IsBot
@@ -42,22 +34,6 @@ public class BotEntity : CharacterEntity
         }
     }
 
-    protected override void SyncData()
-    {
-        if (!PhotonNetwork.IsMasterClient)
-            return;
-        base.SyncData();
-        photonView.OthersRPC(RpcUpdateBotName, botPlayerName);
-    }
-
-    public override void OnPlayerEnteredRoom(Player newPlayer)
-    {
-        if (!PhotonNetwork.IsMasterClient)
-            return;
-        base.OnPlayerEnteredRoom(newPlayer);
-        photonView.TargetRPC(RpcUpdateBotName, newPlayer, botPlayerName);
-    }
-
     // Override to do nothing
     protected override void SetLocalPlayer()
     {
@@ -78,7 +54,7 @@ public class BotEntity : CharacterEntity
         if (!PhotonNetwork.IsMasterClient)
             return;
 
-        if (isDead)
+        if (IsDeadMarked)
         {
             ServerRespawn(false);
             targetPosition = CacheTransform.position;
@@ -106,7 +82,7 @@ public class BotEntity : CharacterEntity
         yield return 0;
         while (true)
         {
-            if (!isDead)
+            if (!IsDeadMarked)
             {
                 yield return StartCoroutine(FindWaypoints());
                 yield return StartCoroutine(WalkToLastPosition());
@@ -212,7 +188,7 @@ public class BotEntity : CharacterEntity
             var brick = hitInfo.transform.GetComponent<BrickEntity>();
             var character = hitInfo.transform.GetComponent<CharacterEntity>();
             return (brick != null && !brick.isDead) || 
-                (character != null && character != this && !character.isDead && gameplayManager.CanReceiveDamage(character, this));
+                (character != null && character != this && !character.IsDeadMarked && gameplayManager.CanReceiveDamage(character, this));
         }
         return false;
     }
@@ -280,11 +256,5 @@ public class BotEntity : CharacterEntity
             (!IsNearWallOrBrickOrBomb(currentPosition, Vector3.forward) ||
             !IsNearWallOrBrickOrBomb(currentPosition, Vector3.left) ||
             !IsNearWallOrBrickOrBomb(currentPosition, Vector3.right))));
-    }
-
-    [PunRPC]
-    protected void RpcUpdateBotName(string name)
-    {
-        botPlayerName = name;
     }
 }
