@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Photon.Pun;
-using Photon.Pun.UtilityScripts;
-using Photon.Realtime;
 
 [RequireComponent(typeof(Rigidbody))]
 public class CharacterEntity : BaseNetworkGameCharacter
@@ -106,9 +104,9 @@ public class CharacterEntity : BaseNetworkGameCharacter
     protected Vector3 currentMoveDirection;
     protected BombEntity kickingBomb;
 
-    public bool isReady { get; private set; }
-    public float deathTime { get; private set; }
-    public float invincibleTime { get; private set; }
+    public bool IsReady { get; private set; }
+    public float DeathTime { get; private set; }
+    public float InvincibleTime { get; private set; }
 
     private bool isHidding;
     public bool IsHidding
@@ -220,7 +218,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
         {
             localPlayerObject.SetActive(false);
         }
-        deathTime = Time.unscaledTime;
+        DeathTime = Time.unscaledTime;
     }
 
     protected override void OnStartLocalPlayer()
@@ -259,11 +257,11 @@ public class CharacterEntity : BaseNetworkGameCharacter
         
         if (IsDead)
         {
-            if (!PhotonNetwork.IsMasterClient && photonView.IsMine && Time.unscaledTime - deathTime >= DISCONNECT_WHEN_NOT_RESPAWN_DURATION)
+            if (!PhotonNetwork.IsMasterClient && photonView.IsMine && Time.unscaledTime - DeathTime >= DISCONNECT_WHEN_NOT_RESPAWN_DURATION)
                 GameNetworkManager.Singleton.LeaveRoom();
         }
 
-        if (PhotonNetwork.IsMasterClient && IsInvincible && Time.unscaledTime - invincibleTime >= GameplayManager.Singleton.invincibleDuration)
+        if (PhotonNetwork.IsMasterClient && IsInvincible && Time.unscaledTime - InvincibleTime >= GameplayManager.Singleton.invincibleDuration)
             IsInvincible = false;
         if (invincibleEffect != null)
             invincibleEffect.SetActive(IsInvincible);
@@ -444,7 +442,8 @@ public class CharacterEntity : BaseNetworkGameCharacter
         {
             if (attacker != null)
                 attacker.KilledTarget(this);
-            deathTime = Time.unscaledTime;
+            photonView.TargetRPC(RpcTargetDead, photonView.Owner);
+            DeathTime = Time.unscaledTime;
             ++syncDieCount.Value;
             IsDeadMarked = true;
             var velocity = CacheRigidbody.velocity;
@@ -546,7 +545,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
         if (!PhotonNetwork.IsMasterClient)
             return;
 
-        invincibleTime = Time.unscaledTime;
+        InvincibleTime = Time.unscaledTime;
         IsInvincible = true;
     }
     
@@ -625,10 +624,10 @@ public class CharacterEntity : BaseNetworkGameCharacter
     [PunRPC]
     protected void RpcServerReady()
     {
-        if (!isReady)
+        if (!IsReady)
         {
             ServerSpawn(false);
-            isReady = true;
+            IsReady = true;
         }
     }
 
@@ -658,6 +657,12 @@ public class CharacterEntity : BaseNetworkGameCharacter
             return;
         if (bombData != null)
             bombs.Add(bombData.Plant(this, position));
+    }
+
+    [PunRPC]
+    protected void RpcTargetDead()
+    {
+        DeathTime = Time.unscaledTime;
     }
 
     [PunRPC]
