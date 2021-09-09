@@ -44,8 +44,8 @@ public class BombEntity : MonoBehaviourPunCallbacks
 
     public bool Exploded { get; protected set; }
     private int _kickerViewId;
-    private sbyte _dirX;
-    private sbyte _dirZ;
+    private int _dirX;
+    private int _dirZ;
     private List<CharacterEntity> ignoredCharacters;
     private CharacterEntity planter;
     public CharacterEntity Planter
@@ -344,7 +344,7 @@ public class BombEntity : MonoBehaviourPunCallbacks
         _planterViewId = planterViewId;
     }
 
-    public void Kick(int kicker, sbyte dirX, sbyte dirZ)
+    public void Kick(int kicker, int dirX, int dirZ)
     {
         _kickerViewId = kicker;
         _dirX = dirX;

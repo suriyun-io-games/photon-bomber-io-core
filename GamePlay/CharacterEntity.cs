@@ -318,7 +318,7 @@ public class CharacterEntity : BaseNetworkGameCharacter
                 (moveDirNorm.z < -0.5f && direction.z < -0.5f))
             {
                 // Kick bomb if direction is opposite
-                CmdKick(kickingBomb.photonView.ViewID, (sbyte)moveDirNorm.x, (sbyte)moveDirNorm.z);
+                CmdKick(kickingBomb.photonView.ViewID, (int)moveDirNorm.x, (int)moveDirNorm.z);
             }
         }
     }
@@ -680,17 +680,17 @@ public class CharacterEntity : BaseNetworkGameCharacter
             Mathf.RoundToInt(vector.z));
     }
 
-    public void CmdKick(int bombViewId, sbyte dirX, sbyte dirZ)
+    public void CmdKick(int bombViewId, int dirX, int dirZ)
     {
         photonView.MasterRPC(RpcKick, bombViewId, dirX, dirZ);
     }
 
     [PunRPC]
-    protected void RpcKick(int bombViewId, sbyte dirX, sbyte dirZ)
+    protected void RpcKick(int bombViewId, int dirX, int dirZ)
     {
         var view = PhotonView.Find(bombViewId);
         if (view == null)
             return;
-        view.GetComponent<BombEntity>().Kick(photonView.ViewID, dirX, dirZ);
+        view.GetComponent<BombEntity>().Kick(photonView.ViewID, (sbyte)dirX, (sbyte)dirZ);
     }
 }
