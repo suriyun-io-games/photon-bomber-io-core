@@ -18,6 +18,7 @@ public class UIMainMenu : MonoBehaviour
     public InputField inputName;
     public Transform characterModelTransform;
     public Transform bombEntityTransform;
+    public bool saveImmediatelyOnSelectItem = true;
     private int selectCharacter = 0;
     private int selectHead = 0;
     private int selectBomb = 0;
@@ -100,7 +101,11 @@ public class UIMainMenu : MonoBehaviour
 
     private IEnumerator StartRoutine()
     {
-        yield return null;
+        // Wait until player save validated
+        while (!GameInstance.Singleton.PlayerSaveValidated)
+        {
+            yield return null;
+        }
         OnClickLoadData();
         readyToUpdate = true;
     }
@@ -181,31 +186,43 @@ public class UIMainMenu : MonoBehaviour
     public void OnClickBackCharacter()
     {
         --SelectCharacter;
+        if (saveImmediatelyOnSelectItem)
+            OnClickSaveData();
     }
 
     public void OnClickNextCharacter()
     {
         ++SelectCharacter;
+        if (saveImmediatelyOnSelectItem)
+            OnClickSaveData();
     }
 
     public void OnClickBackHead()
     {
         --SelectHead;
+        if (saveImmediatelyOnSelectItem)
+            OnClickSaveData();
     }
 
     public void OnClickNextHead()
     {
         ++SelectHead;
+        if (saveImmediatelyOnSelectItem)
+            OnClickSaveData();
     }
 
     public void OnClickBackBomb()
     {
         --SelectBomb;
+        if (saveImmediatelyOnSelectItem)
+            OnClickSaveData();
     }
 
     public void OnClickNextBomb()
     {
         ++SelectBomb;
+        if (saveImmediatelyOnSelectItem)
+            OnClickSaveData();
     }
 
     public void OnInputNameChanged(string eventInput)
